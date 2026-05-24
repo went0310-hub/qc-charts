@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>品管圖形工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --deep-navy: #0d1b2a;
+    --panel: #162032;
+    --panel-border: #1e3150;
+    --accent-blue: #1565C0;
+    --accent-cyan: #00bcd4;
+    --text-primary: #e8f0fe;
+    --text-secondary: #8faabe;
+    --text-muted: #4a6080;
+    --input-bg: #0d1b2a;
+    --input-border: #1e3a5f;
+    --input-focus: #1565C0;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+    /* Chart text is black per requirement */
+    --chart-text: #000000;
+    --grid-line: rgb(242,242,242);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--deep-navy);
+    color: var(--text-primary);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(21,101,192,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(27,94,32,0.08) 0%, transparent 50%);
+  }
+
+  header {
+    background: linear-gradient(135deg, #0d1b2a 0%, #162032 100%);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 20px 40px;
+    display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .header-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #1565C0, #00bcd4);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  header h1 {
+    font-weight: 900; font-size: 22px; letter-spacing: 3px;
+    background: linear-gradient(90deg, #e8f0fe, #00bcd4);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  header span {
+    color: var(--text-muted); font-size: 13px; font-weight: 300;
+    letter-spacing: 2px; margin-left: 8px; padding-top: 3px;
+  }
+
+  .main-container { max-width: 1400px; margin: 0 auto; padding: 30px 24px; }
+
+  .tab-nav {
+    display: flex; gap: 4px;
+    background: var(--panel); padding: 6px;
+    border-radius: 14px; border: 1px solid var(--panel-border);
+    margin-bottom: 28px;
+  }
+
+  .tab-btn {
+    flex: 1; padding: 12px 16px; border: none;
+    background: transparent; color: var(--text-secondary);
+    font-family: 'Noto Sans TC', sans-serif; font-size: 13px;
+    font-weight: 500; cursor: pointer; border-radius: 10px;
+    transition: all 0.25s; letter-spacing: 1px;
+  }
+  .tab-btn:hover { background: rgba(21,101,192,0.15); color: var(--text-primary); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #1565C0, #0d47a1);
+    color: #fff; box-shadow: 0 2px 12px rgba(21,101,192,0.4);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .chart-layout {
+    display: grid; grid-template-columns: 350px 1fr;
+    gap: 24px; align-items: start;
+  }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 16px; padding: 24px; box-shadow: var(--shadow);
+  }
+
+  .panel-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    color: var(--accent-cyan); text-transform: uppercase;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title::before {
+    content:''; display:inline-block; width:3px; height:16px;
+    background:var(--accent-cyan); border-radius:2px;
+  }
+
+  .form-group { margin-bottom: 14px; }
+
+  label {
+    display: block; font-size: 12px; font-weight: 500;
+    color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.5px;
+  }
+
+  input[type="text"], input[type="number"], select {
+    width: 100%; background: var(--input-bg);
+    border: 1px solid var(--input-border); color: var(--text-primary);
+    padding: 8px 12px; border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif; font-size: 13px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, select:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.15);
+  }
+  select option { background: #162032; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+  .divider { height: 1px; background: var(--panel-border); margin: 14px 0; }
+
+  .section-label {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 10px; margin-top: 4px;
+  }
+
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 6px;
+  }
+
+  .chart-title-input {
+    width: 100%; background: rgba(21,101,192,0.08);
+    border: 1px solid rgba(21,101,192,0.3); color: var(--text-primary);
+    padding: 10px 14px; border-radius: 8px;
+    font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 500;
+    outline: none; margin-bottom: 14px; transition: border-color 0.2s;
+  }
+  .chart-title-input:focus { border-color: var(--accent-cyan); }
+
+  .gen-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, #1565C0, #0d47a1);
+    border: none; border-radius: 10px; color: #fff;
+    font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer; margin-top: 8px;
+    transition: all 0.2s; box-shadow: 0 4px 16px rgba(21,101,192,0.3);
+  }
+  .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(21,101,192,0.45); }
+
+  .dl-btn {
+    width: 100%; padding: 10px; background: transparent;
+    border: 1px solid var(--panel-border); border-radius: 8px;
+    color: var(--text-secondary); font-family: 'Noto Sans TC', sans-serif;
+    font-size: 12px; cursor: pointer; margin-top: 8px;
+    transition: all 0.2s; letter-spacing: 1px;
+  }
+  .dl-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+  /* Chart wrapper: white background so chart text (black) is readable */
+  .chart-wrapper {
+    background: #ffffff;
+    border: 1px solid var(--panel-border);
+    border-radius: 16px; padding: 28px;
+    box-shadow: var(--shadow); position: relative;
+    min-height: 460px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  .chart-placeholder { text-align: center; color: #aaa; }
+  .chart-placeholder .big-icon { font-size: 48px; margin-bottom: 12px; }
+  .chart-placeholder p { font-size: 14px; letter-spacing: 1px; }
+
+  canvas { max-width: 100%; }
+
+  .chart-display-title {
+    font-size: 18px; font-weight: 700; color: #000;
+    text-align: center; margin-bottom: 16px; letter-spacing: 1px;
+    width: 100%;
+  }
+
+  .radar-items-list { display: flex; flex-direction: column; gap: 8px; }
+  .radar-item-row {
+    display: grid; grid-template-columns: 1fr 80px 80px;
+    gap: 8px; align-items: center;
+  }
+
+  .add-item-btn, .remove-item-btn {
+    background: transparent; border: 1px dashed var(--input-border);
+    color: var(--text-secondary); padding: 7px; border-radius: 6px;
+    cursor: pointer; font-size: 12px; transition: all 0.2s;
+    width: 100%; font-family: 'Noto Sans TC', sans-serif;
+  }
+  .add-item-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .remove-item-btn:hover { border-color: #B71C1C; color: #ef9a9a; }
+
+  .trend-points-area { display: flex; flex-direction: column; gap: 6px; }
+  .trend-point-row { display: grid; grid-template-columns: 1fr 100px; gap: 8px; }
+
+  .scroll-area { max-height: 300px; overflow-y: auto; padding-right: 4px; }
+  .scroll-area::-webkit-scrollbar { width: 4px; }
+  .scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+  @media (max-width: 900px) {
+    .chart-layout { grid-template-columns: 1fr; }
+    header { padding: 16px 20px; }
+    header h1 { font-size: 16px; }
+    header span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">📊</div>
+  <h1>品管圖形工具</h1>
+  <span>QUALITY CONTROL CHARTS</span>
+</header>
+
+<div class="main-container">
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('tab1')">📊 目標設定<br><small>直條圖</small></button>
+    <button class="tab-btn" onclick="switchTab('tab2')">🔧 對策實施<br><small>直條圖</small></button>
+    <button class="tab-btn" onclick="switchTab('tab3')">✅ 效果確認<br><small>直條圖</small></button>
+    <button class="tab-btn" onclick="switchTab('tab4')">📈 推移圖<br><small>折線圖</small></button>
+    <button class="tab-btn" onclick="switchTab('tab5')">🕸️ 雷達圖</button>
+  </div>
+
+  <!-- ===== TAB 1 ===== -->
+  <div id="tab1" class="tab-content active">
+    <div class="chart-layout">
+      <div class="panel">
+        <div class="panel-title">目標設定 · 資料輸入</div>
+        <div class="form-group">
+          <label>圖表標題</label>
+          <input class="chart-title-input" id="t1_title" type="text" value="不良率改善目標">
+        </div>
+
+        <div class="section-label"><span class="color-dot" style="background:#1565C0"></span>改善前</div>
+        <div class="form-group"><label>日期區間（顯示於X軸）</label>
+          <input type="text" id="t1_before_date" placeholder="例：10/17-10/30" value="10/17-10/30"></div>
+        <div class="form-group"><label>數值</label>
+          <input type="number" id="t1_before_val" value="8.5" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="section-label"><span class="color-dot" style="background:#B71C1C"></span>目標值</div>
+        <div class="form-group"><label>目標數值</label>
+          <input type="number" id="t1_target_val" value="3.0" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="row-2">
+          <div class="form-group"><label>數值單位</label>
+            <select id="t1_unit">
+              <option value="percent">百分比 (%)</option>
+              <option value="permille">千分比 (‰)</option>
+              <option value="value">數值</option>
+              <option value="time">時間</option>
+            </select></div>
+          <div class="form-group"><label>小數位數</label>
+            <select id="t1_decimal">
+              <option value="0">0</option><option value="1" selected>1</option>
+              <option value="2">2</option><option value="3">3</option>
+            </select></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>垂直軸標題</label>
+            <input type="text" id="t1_yaxis_title" value="不良率"></div>
+          <div class="form-group"><label>垂直軸最大值（選填）</label>
+            <input type="number" id="t1_ymax" placeholder="自動" step="any"></div>
+        </div>
+
+        <button class="gen-btn" onclick="generateChart1()">▶ 生成圖表</button>
+        <button class="dl-btn" onclick="downloadChart('chart1')">⬇ 下載 JPG</button>
+      </div>
+      <div class="chart-wrapper" id="wrap1">
+        <div class="chart-placeholder" id="placeholder1"><div class="big-icon">📊</div><p>輸入資料後點擊「生成圖表」</p></div>
+        <div id="chart1_title" class="chart-display-title" style="display:none"></div>
+        <canvas id="chart1" style="display:none"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2 ===== -->
+  <div id="tab2" class="tab-content">
+    <div class="chart-layout">
+      <div class="panel">
+        <div class="panel-title">對策實施 · 資料輸入</div>
+        <div class="form-group"><label>圖表標題</label>
+          <input class="chart-title-input" id="t2_title" type="text" value="對策實施成效"></div>
+
+        <div class="section-label"><span class="color-dot" style="background:#1565C0"></span>改善前</div>
+        <div class="form-group"><label>日期區間（顯示於X軸）</label>
+          <input type="text" id="t2_before_date" placeholder="例：10/17-10/30" value="10/17-10/30"></div>
+        <div class="form-group"><label>數值</label>
+          <input type="number" id="t2_before_val" value="8.5" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="section-label"><span class="color-dot" style="background:#2E7D32"></span>改善中</div>
+        <div class="form-group"><label>日期區間（顯示於X軸）</label>
+          <input type="text" id="t2_during_date" placeholder="例：11/01-11/30" value="11/01-11/30"></div>
+        <div class="form-group"><label>數值</label>
+          <input type="number" id="t2_during_val" value="5.2" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="row-2">
+          <div class="form-group"><label>數值單位</label>
+            <select id="t2_unit">
+              <option value="percent">百分比 (%)</option>
+              <option value="permille">千分比 (‰)</option>
+              <option value="value">數值</option>
+              <option value="time">時間</option>
+            </select></div>
+          <div class="form-group"><label>小數位數</label>
+            <select id="t2_decimal">
+              <option value="0">0</option><option value="1" selected>1</option>
+              <option value="2">2</option><option value="3">3</option>
+            </select></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>垂直軸標題</label>
+            <input type="text" id="t2_yaxis_title" value="不良率"></div>
+          <div class="form-group"><label>垂直軸最大值（選填）</label>
+            <input type="number" id="t2_ymax" placeholder="自動" step="any"></div>
+        </div>
+
+        <button class="gen-btn" onclick="generateChart2()">▶ 生成圖表</button>
+        <button class="dl-btn" onclick="downloadChart('chart2')">⬇ 下載 JPG</button>
+      </div>
+      <div class="chart-wrapper" id="wrap2">
+        <div class="chart-placeholder" id="placeholder2"><div class="big-icon">🔧</div><p>輸入資料後點擊「生成圖表」</p></div>
+        <div id="chart2_title" class="chart-display-title" style="display:none"></div>
+        <canvas id="chart2" style="display:none"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3 ===== -->
+  <div id="tab3" class="tab-content">
+    <div class="chart-layout">
+      <div class="panel">
+        <div class="panel-title">效果確認 · 資料輸入</div>
+        <div class="form-group"><label>圖表標題</label>
+          <input class="chart-title-input" id="t3_title" type="text" value="改善效果確認"></div>
+
+        <div class="section-label"><span class="color-dot" style="background:#1565C0"></span>改善前</div>
+        <div class="form-group"><label>日期區間（顯示於X軸）</label>
+          <input type="text" id="t3_before_date" placeholder="例：10/17-10/30" value="10/17-10/30"></div>
+        <div class="form-group"><label>數值</label>
+          <input type="number" id="t3_before_val" value="8.5" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="section-label"><span class="color-dot" style="background:#B71C1C"></span>目標值</div>
+        <div class="form-group"><label>目標數值</label>
+          <input type="number" id="t3_target_val" value="3.0" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="section-label"><span class="color-dot" style="background:#2E7D32"></span>改善後</div>
+        <div class="form-group"><label>日期區間（顯示於X軸）</label>
+          <input type="text" id="t3_after_date" placeholder="例：12/01-12/31" value="12/01-12/31"></div>
+        <div class="form-group"><label>數值</label>
+          <input type="number" id="t3_after_val" value="2.1" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="row-2">
+          <div class="form-group"><label>數值單位</label>
+            <select id="t3_unit">
+              <option value="percent">百分比 (%)</option>
+              <option value="permille">千分比 (‰)</option>
+              <option value="value">數值</option>
+              <option value="time">時間</option>
+            </select></div>
+          <div class="form-group"><label>小數位數</label>
+            <select id="t3_decimal">
+              <option value="0">0</option><option value="1" selected>1</option>
+              <option value="2">2</option><option value="3">3</option>
+            </select></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>垂直軸標題</label>
+            <input type="text" id="t3_yaxis_title" value="不良率"></div>
+          <div class="form-group"><label>垂直軸最大值（選填）</label>
+            <input type="number" id="t3_ymax" placeholder="自動" step="any"></div>
+        </div>
+
+        <button class="gen-btn" onclick="generateChart3()">▶ 生成圖表</button>
+        <button class="dl-btn" onclick="downloadChart('chart3')">⬇ 下載 JPG</button>
+      </div>
+      <div class="chart-wrapper" id="wrap3">
+        <div class="chart-placeholder" id="placeholder3"><div class="big-icon">✅</div><p>輸入資料後點擊「生成圖表」</p></div>
+        <div id="chart3_title" class="chart-display-title" style="display:none"></div>
+        <canvas id="chart3" style="display:none"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 4 ===== -->
+  <div id="tab4" class="tab-content">
+    <div class="chart-layout">
+      <div class="panel">
+        <div class="panel-title">推移圖 · 資料輸入</div>
+        <div class="form-group"><label>圖表標題</label>
+          <input class="chart-title-input" id="t4_title" type="text" value="月別不良率推移"></div>
+        <div class="row-2">
+          <div class="form-group"><label>數值單位</label>
+            <select id="t4_unit">
+              <option value="percent">百分比 (%)</option>
+              <option value="permille">千分比 (‰)</option>
+              <option value="value">數值</option>
+              <option value="time">時間</option>
+            </select></div>
+          <div class="form-group"><label>小數位數</label>
+            <select id="t4_decimal">
+              <option value="0">0</option><option value="1" selected>1</option>
+              <option value="2">2</option><option value="3">3</option>
+            </select></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>垂直軸標題</label>
+            <input type="text" id="t4_yaxis_title" value="不良率"></div>
+          <div class="form-group"><label>垂直軸最大值（選填）</label>
+            <input type="number" id="t4_ymax" placeholder="自動" step="any"></div>
+        </div>
+        <div class="form-group"><label>目標線（選填，留空不顯示）</label>
+          <input type="number" id="t4_target" placeholder="例：3.0" step="any"></div>
+
+        <div class="divider"></div>
+        <div class="section-label">資料點</div>
+        <div class="scroll-area">
+          <div class="trend-points-area" id="trend_points"></div>
+        </div>
+        <button class="add-item-btn" style="margin-top:8px" onclick="addTrendRow()">＋ 新增資料點</button>
+        <button class="gen-btn" style="margin-top:12px" onclick="generateChart4()">▶ 生成圖表</button>
+        <button class="dl-btn" onclick="downloadChart('chart4')">⬇ 下載 JPG</button>
+      </div>
+      <div class="chart-wrapper" id="wrap4">
+        <div class="chart-placeholder" id="placeholder4"><div class="big-icon">📈</div><p>輸入資料後點擊「生成圖表」</p></div>
+        <div id="chart4_title" class="chart-display-title" style="display:none"></div>
+        <canvas id="chart4" style="display:none"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 5 ===== -->
+  <div id="tab5" class="tab-content">
+    <div class="chart-layout">
+      <div class="panel">
+        <div class="panel-title">雷達圖 · 資料輸入</div>
+        <div class="form-group"><label>圖表標題</label>
+          <input class="chart-title-input" id="t5_title" type="text" value="品質特性評估"></div>
+        <div class="row-2">
+          <div class="form-group"><label>系列1名稱</label>
+            <input type="text" id="t5_s1_name" value="改善前"></div>
+          <div class="form-group"><label>系列2名稱（選填）</label>
+            <input type="text" id="t5_s2_name" value="改善後"></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>最大刻度值</label>
+            <input type="number" id="t5_max" value="10" step="any"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-label">評估項目</div>
+        <div class="scroll-area">
+          <div style="display:grid;grid-template-columns:1fr 70px 70px;gap:6px;margin-bottom:6px;">
+            <span style="font-size:11px;color:var(--text-muted);">項目名稱</span>
+            <span style="font-size:11px;color:var(--text-muted);">系列1</span>
+            <span style="font-size:11px;color:var(--text-muted);">系列2</span>
+          </div>
+          <div class="radar-items-list" id="radar_items"></div>
+        </div>
+        <button class="add-item-btn" style="margin-top:8px" onclick="addRadarRow()">＋ 新增項目</button>
+        <button class="gen-btn" style="margin-top:12px" onclick="generateChart5()">▶ 生成圖表</button>
+        <button class="dl-btn" onclick="downloadChart('chart5')">⬇ 下載 JPG</button>
+      </div>
+      <div class="chart-wrapper" id="wrap5">
+        <div class="chart-placeholder" id="placeholder5"><div class="big-icon">🕸️</div><p>輸入資料後點擊「生成圖表」</p></div>
+        <div id="chart5_title" class="chart-display-title" style="display:none"></div>
+        <canvas id="chart5" style="display:none"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== CONSTANTS =====
+const chartInstances = {};
+
+const CHART_TEXT   = '#000000';          // all chart text: black
+const GRID_MAIN    = 'rgb(242,242,242)'; // primary grid line only
+const GRID_NONE    = 'rgba(0,0,0,0)';   // no other gridlines
+const COL_BEFORE   = '#1565C0';
+const COL_TARGET   = '#B71C1C';
+const COL_DURING   = '#2E7D32';
+const COL_AFTER    = '#2E7D32';
+
+const FONT_TITLE      = 18;
+const FONT_AXIS_TITLE = 14;
+const FONT_AXIS_TICK  = 12;
+const FONT_DATA_LABEL = 16;
+
+Chart.defaults.color = CHART_TEXT;
+Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+
+// ===== TAB =====
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab-btn')[parseInt(id.replace('tab',''))-1].classList.add('active');
+}
+
+// ===== UNIT =====
+function getUnitSuffix(unit) {
+  if (unit === 'percent')  return '%';
+  if (unit === 'permille') return '‰';
+  return '';
+}
+function formatVal(val, unit, decimal) {
+  return parseFloat(val).toFixed(parseInt(decimal)) + getUnitSuffix(unit);
+}
+
+// ===== HELPERS =====
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+function showChart(id) {
+  const n = id.replace('chart','');
+  document.getElementById('placeholder'+n).style.display = 'none';
+  document.getElementById(id+'_title').style.display = 'block';
+  document.getElementById(id).style.display = 'block';
+}
+function getYMax(raw) {
+  const v = parseFloat(raw);
+  return (!isNaN(v) && v > 0) ? v : undefined;
+}
+
+// ===== DATA LABEL PLUGIN (draws above each bar) =====
+const dataLabelsPlugin = {
+  id: 'customDataLabels',
+  afterDatasetsDraw(chart) {
+    if (chart.config.type === 'radar' || chart.config.type === 'line') return;
+    const { ctx } = chart;
+    chart.data.datasets.forEach((dataset, i) => {
+      const meta = chart.getDatasetMeta(i);
+      meta.data.forEach((bar, idx) => {
+        const val = dataset.data[idx];
+        if (val === null || val === undefined) return;
+        const unit = chart._qcUnit || 'value';
+        const dec  = chart._qcDecimal || '1';
+        ctx.save();
+        ctx.font = `700 ${FONT_DATA_LABEL}px 'Noto Sans TC', sans-serif`;
+        ctx.fillStyle = CHART_TEXT;
+        ctx.textAlign = 'center';
+        ctx.fillText(formatVal(val, unit, dec), bar.x, bar.y - 10);
+        ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(dataLabelsPlugin);
+
+// ===== Y-AXIS TITLE VERTICAL PLUGIN =====
+// Chart.js renders y-axis title rotated by default. We force it to be vertical (characters stacked).
+// We override by drawing it ourselves on the left.
+const verticalYTitlePlugin = {
+  id: 'verticalYTitle',
+  afterDraw(chart) {
+    const yAxis = chart.scales['y'];
+    if (!yAxis) return;
+    // Read title text from custom property set on chart instance
+    const text = chart._qcYTitle;
+    if (!text) return;
+    const { ctx } = chart;
+    const fontSize = FONT_AXIS_TITLE;
+    ctx.save();
+    ctx.font = `600 ${fontSize}px 'Noto Sans TC', sans-serif`;
+    ctx.fillStyle = CHART_TEXT;
+    ctx.textAlign = 'center';
+    // Draw each character stacked vertically
+    const x = yAxis.left - 26;
+    const centerY = (yAxis.top + yAxis.bottom) / 2;
+    const lineH = fontSize + 4;
+    const chars = [...text];
+    const totalH = chars.length * lineH;
+    chars.forEach((ch, i) => {
+      ctx.fillText(ch, x, centerY - totalH / 2 + i * lineH + fontSize / 2);
+    });
+    ctx.restore();
+  }
+};
+Chart.register(verticalYTitlePlugin);
+
+// ===== BAR CONFIG =====
+// gridline: only the major horizontal baseline (drawOnChartArea for x=false, y= only zero or major)
+function barConfig(labels, datasets, yTitle, unit, decimal, ymaxRaw) {
+  const ymax = getYMax(ymaxRaw);
+  return {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => formatVal(ctx.raw, unit, decimal) } }
+      },
+      layout: { padding: { top: 36, right: 24, left: 48, bottom: 10 } },
+      scales: {
+        x: {
+          ticks: { font: { size: FONT_AXIS_TICK }, color: CHART_TEXT, maxRotation: 0 },
+          title: { display: false },
+          grid: { drawOnChartArea: false, drawTicks: true, color: GRID_NONE },
+          border: { color: '#ccc' }
+        },
+        y: {
+          max: ymax,
+          ticks: {
+            font: { size: FONT_AXIS_TICK }, color: CHART_TEXT,
+            callback: v => formatVal(v, unit, decimal)
+          },
+          title: {
+            display: false, text: yTitle,
+            font: { size: FONT_AXIS_TITLE, weight: '600' }, color: CHART_TEXT
+          },
+          // Only show the primary horizontal gridline (at each major tick)
+          grid: {
+            color: ctx => ctx.tick.value === 0 ? '#bbb' : GRID_MAIN,
+            lineWidth: 1,
+            drawTicks: false,
+          },
+          border: { color: '#ccc', dash: [] }
+        }
+      }
+    }
+  };
+}
+
+// ===== X-AXIS LABEL BUILDER =====
+// "改善前10/17-10/30", "目標值", "改善後12/01-12/31"
+function makeLabel(prefix, dateStr) {
+  if (!dateStr) return prefix;
+  return prefix + '\n' + dateStr;
+}
+
+// ===== CHART 1 =====
+function generateChart1() {
+  const beforeDate = document.getElementById('t1_before_date').value.trim();
+  const beforeVal  = parseFloat(document.getElementById('t1_before_val').value);
+  const targetVal  = parseFloat(document.getElementById('t1_target_val').value);
+  const unit       = document.getElementById('t1_unit').value;
+  const decimal    = document.getElementById('t1_decimal').value;
+  const chartTitle = document.getElementById('t1_title').value || '目標設定';
+  const yTitle     = document.getElementById('t1_yaxis_title').value || '';
+  const ymaxRaw    = document.getElementById('t1_ymax').value;
+
+  if (isNaN(beforeVal) || isNaN(targetVal)) { alert('請輸入有效數值'); return; }
+
+  destroyChart('chart1'); showChart('chart1');
+  document.getElementById('chart1_title').textContent = chartTitle;
+
+  const labels = [
+    makeLabel('改善前', beforeDate),
+    '目標值'
+  ];
+  const cfg = barConfig(labels, [{
+    data: [beforeVal, targetVal],
+    backgroundColor: [COL_BEFORE, COL_TARGET],
+    borderRadius: 4, borderSkipped: false, barPercentage: 0.45,
+  }], yTitle, unit, decimal, ymaxRaw);
+
+  const chart = new Chart(document.getElementById('chart1').getContext('2d'), cfg);
+  chart._qcUnit = unit; chart._qcDecimal = decimal; chart._qcYTitle = yTitle;
+  chartInstances['chart1'] = chart;
+}
+
+// ===== CHART 2 =====
+function generateChart2() {
+  const beforeDate = document.getElementById('t2_before_date').value.trim();
+  const beforeVal  = parseFloat(document.getElementById('t2_before_val').value);
+  const duringDate = document.getElementById('t2_during_date').value.trim();
+  const duringVal  = parseFloat(document.getElementById('t2_during_val').value);
+  const unit       = document.getElementById('t2_unit').value;
+  const decimal    = document.getElementById('t2_decimal').value;
+  const chartTitle = document.getElementById('t2_title').value || '對策實施';
+  const yTitle     = document.getElementById('t2_yaxis_title').value || '';
+  const ymaxRaw    = document.getElementById('t2_ymax').value;
+
+  if (isNaN(beforeVal) || isNaN(duringVal)) { alert('請輸入有效數值'); return; }
+
+  destroyChart('chart2'); showChart('chart2');
+  document.getElementById('chart2_title').textContent = chartTitle;
+
+  const labels = [
+    makeLabel('改善前', beforeDate),
+    makeLabel('改善中', duringDate)
+  ];
+  const cfg = barConfig(labels, [{
+    data: [beforeVal, duringVal],
+    backgroundColor: [COL_BEFORE, COL_DURING],
+    borderRadius: 4, borderSkipped: false, barPercentage: 0.45,
+  }], yTitle, unit, decimal, ymaxRaw);
+
+  const chart = new Chart(document.getElementById('chart2').getContext('2d'), cfg);
+  chart._qcUnit = unit; chart._qcDecimal = decimal; chart._qcYTitle = yTitle;
+  chartInstances['chart2'] = chart;
+}
+
+// ===== CHART 3 =====
+function generateChart3() {
+  const beforeDate = document.getElementById('t3_before_date').value.trim();
+  const beforeVal  = parseFloat(document.getElementById('t3_before_val').value);
+  const targetVal  = parseFloat(document.getElementById('t3_target_val').value);
+  const afterDate  = document.getElementById('t3_after_date').value.trim();
+  const afterVal   = parseFloat(document.getElementById('t3_after_val').value);
+  const unit       = document.getElementById('t3_unit').value;
+  const decimal    = document.getElementById('t3_decimal').value;
+  const chartTitle = document.getElementById('t3_title').value || '效果確認';
+  const yTitle     = document.getElementById('t3_yaxis_title').value || '';
+  const ymaxRaw    = document.getElementById('t3_ymax').value;
+
+  if (isNaN(beforeVal) || isNaN(targetVal) || isNaN(afterVal)) { alert('請輸入有效數值'); return; }
+
+  destroyChart('chart3'); showChart('chart3');
+  document.getElementById('chart3_title').textContent = chartTitle;
+
+  const labels = [
+    makeLabel('改善前', beforeDate),
+    '目標值',
+    makeLabel('改善後', afterDate)
+  ];
+  const cfg = barConfig(labels, [{
+    data: [beforeVal, targetVal, afterVal],
+    backgroundColor: [COL_BEFORE, COL_TARGET, COL_AFTER],
+    borderRadius: 4, borderSkipped: false, barPercentage: 0.45,
+  }], yTitle, unit, decimal, ymaxRaw);
+
+  const chart = new Chart(document.getElementById('chart3').getContext('2d'), cfg);
+  chart._qcUnit = unit; chart._qcDecimal = decimal; chart._qcYTitle = yTitle;
+  chartInstances['chart3'] = chart;
+}
+
+// ===== CHART 4: 推移圖 =====
+function addTrendRow(label='', val='') {
+  const area = document.getElementById('trend_points');
+  const row = document.createElement('div');
+  row.className = 'trend-point-row';
+  row.innerHTML = `
+    <input type="text" placeholder="例：2024/01" value="${label}" style="font-size:12px">
+    <input type="number" placeholder="數值" value="${val}" step="any" style="font-size:12px">
+  `;
+  area.appendChild(row);
+}
+
+function generateChart4() {
+  const rows = document.querySelectorAll('#trend_points .trend-point-row');
+  const labels = [], data = [];
+  rows.forEach(r => {
+    const inputs = r.querySelectorAll('input');
+    const lbl = inputs[0].value.trim();
+    const val = parseFloat(inputs[1].value);
+    if (lbl && !isNaN(val)) { labels.push(lbl); data.push(val); }
+  });
+  if (labels.length < 2) { alert('請至少輸入2個資料點'); return; }
+
+  const unit       = document.getElementById('t4_unit').value;
+  const decimal    = document.getElementById('t4_decimal').value;
+  const chartTitle = document.getElementById('t4_title').value || '推移圖';
+  const yTitle     = document.getElementById('t4_yaxis_title').value || '';
+  const ymaxRaw    = document.getElementById('t4_ymax').value;
+  const ymax       = getYMax(ymaxRaw);
+  const targetRaw  = document.getElementById('t4_target').value;
+  const targetVal  = targetRaw !== '' ? parseFloat(targetRaw) : null;
+
+  destroyChart('chart4'); showChart('chart4');
+  document.getElementById('chart4_title').textContent = chartTitle;
+
+  const datasets = [{
+    label: '實績', data,
+    borderColor: '#1565C0', backgroundColor: 'rgba(21,101,192,0.08)',
+    pointBackgroundColor: '#1565C0', pointRadius: 6, pointHoverRadius: 8,
+    fill: true, tension: 0.3, borderWidth: 2.5,
+  }];
+
+  if (targetVal !== null && !isNaN(targetVal)) {
+    datasets.push({
+      label: '目標線', data: Array(labels.length).fill(targetVal),
+      borderColor: COL_TARGET, borderDash: [8,4], borderWidth: 2,
+      pointRadius: 0, fill: false,
+    });
+  }
+
+  const chart = new Chart(document.getElementById('chart4').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: targetVal !== null, labels: { color: CHART_TEXT, font: { size: 13 } } },
+        tooltip: { callbacks: { label: ctx => formatVal(ctx.raw, unit, decimal) } }
+      },
+      layout: { padding: { top: 20, right: 24, left: 48, bottom: 10 } },
+      scales: {
+        x: {
+          ticks: { font: { size: FONT_AXIS_TICK }, color: CHART_TEXT },
+          grid: { drawOnChartArea: false, color: GRID_NONE },
+          border: { color: '#ccc' }
+        },
+        y: {
+          max: ymax,
+          ticks: { font: { size: FONT_AXIS_TICK }, color: CHART_TEXT, callback: v => formatVal(v, unit, decimal) },
+          title: { display: false, text: yTitle, font: { size: FONT_AXIS_TITLE, weight: '600' }, color: CHART_TEXT },
+          grid: { color: ctx => ctx.tick.value === 0 ? '#bbb' : GRID_MAIN, lineWidth: 1, drawTicks: false },
+          border: { color: '#ccc' }
+        }
+      }
+    }
+  });
+  chart._qcUnit = unit; chart._qcDecimal = decimal; chart._qcYTitle = yTitle;
+  chartInstances['chart4'] = chart;
+}
+
+// ===== CHART 5: 雷達圖 =====
+function addRadarRow(name='', v1='', v2='') {
+  const list = document.getElementById('radar_items');
+  const row = document.createElement('div');
+  row.className = 'radar-item-row';
+  row.innerHTML = `
+    <input type="text" placeholder="項目名稱" value="${name}" style="font-size:12px">
+    <input type="number" placeholder="系列1" value="${v1}" step="any" style="font-size:12px">
+    <input type="number" placeholder="系列2" value="${v2}" step="any" style="font-size:12px">
+    <button class="remove-item-btn" onclick="this.parentElement.remove()" style="grid-column:span 3;font-size:11px;padding:4px">✕ 移除</button>
+  `;
+  list.appendChild(row);
+}
+
+function generateChart5() {
+  const rows = document.querySelectorAll('#radar_items .radar-item-row');
+  const labels = [], s1data = [], s2data = [];
+  rows.forEach(r => {
+    const inputs = r.querySelectorAll('input');
+    const lbl = inputs[0].value.trim();
+    const v1  = parseFloat(inputs[1].value);
+    const v2  = parseFloat(inputs[2].value);
+    if (lbl) {
+      labels.push(lbl);
+      s1data.push(isNaN(v1) ? 0 : v1);
+      s2data.push(isNaN(v2) ? null : v2);
+    }
+  });
+  if (labels.length < 3) { alert('請至少輸入3個評估項目'); return; }
+
+  const s1Name = document.getElementById('t5_s1_name').value || '系列1';
+  const s2Name = document.getElementById('t5_s2_name').value || '';
+  const maxVal  = parseFloat(document.getElementById('t5_max').value) || 10;
+  const chartTitle = document.getElementById('t5_title').value || '雷達圖';
+
+  destroyChart('chart5'); showChart('chart5');
+  document.getElementById('chart5_title').textContent = chartTitle;
+
+  const datasets = [{
+    label: s1Name, data: s1data,
+    backgroundColor: 'rgba(21,101,192,0.2)', borderColor: '#1565C0',
+    pointBackgroundColor: '#1565C0', pointRadius: 5, borderWidth: 2,
+  }];
+
+  if (s2data.some(v => v !== null) && s2Name) {
+    datasets.push({
+      label: s2Name, data: s2data.map(v => v === null ? 0 : v),
+      backgroundColor: 'rgba(46,125,50,0.18)', borderColor: '#2E7D32',
+      pointBackgroundColor: '#2E7D32', pointRadius: 5, borderWidth: 2,
+    });
+  }
+
+  const chart = new Chart(document.getElementById('chart5').getContext('2d'), {
+    type: 'radar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: true, labels: { color: CHART_TEXT, font: { size: 13 }, padding: 16 } }
+      },
+      scales: {
+        r: {
+          min: 0, max: maxVal,
+          ticks: { stepSize: maxVal/5, font: { size: 11 }, color: CHART_TEXT, backdropColor: 'transparent' },
+          pointLabels: { font: { size: 13, weight: '600' }, color: CHART_TEXT },
+          grid: { color: GRID_MAIN },
+          angleLines: { color: 'rgb(220,220,220)' },
+        }
+      }
+    }
+  });
+  chartInstances['chart5'] = chart;
+}
+
+// ===== DOWNLOAD AS JPG =====
+function downloadChart(id) {
+  if (!chartInstances[id]) { alert('請先生成圖表'); return; }
+  const canvas = document.getElementById(id);
+  const titleEl = document.getElementById(id + '_title');
+
+  const scale = 2;
+  const off = document.createElement('canvas');
+  off.width  = canvas.width * scale;
+  off.height = (canvas.height + 64) * scale;
+  const ctx = off.getContext('2d');
+  ctx.scale(scale, scale);
+
+  // White background for JPG
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, off.width, off.height);
+
+  // Title in black
+  ctx.fillStyle = '#000000';
+  ctx.font = `700 18px 'Noto Sans TC', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(titleEl.textContent, canvas.width / 2, 36);
+
+  // Chart
+  ctx.drawImage(canvas, 0, 52, canvas.width, canvas.height);
+
+  const link = document.createElement('a');
+  link.download = `${titleEl.textContent || id}.jpg`;
+  link.href = off.toDataURL('image/jpeg', 0.95);
+  link.click();
+}
+
+// ===== INIT DEFAULTS =====
+function initDefaults() {
+  [['2024/01','8.5'],['2024/02','7.8'],['2024/03','7.2'],
+   ['2024/04','6.5'],['2024/05','5.8'],['2024/06','5.0'],
+   ['2024/07','4.3'],['2024/08','3.6'],['2024/09','3.1'],
+  ].forEach(([l,v]) => addTrendRow(l,v));
+
+  [['準時交貨','6','8'],['品質合格率','5','9'],['成本控制','7','7'],
+   ['客戶滿意度','5','8'],['生產效率','6','8'],
+  ].forEach(([n,v1,v2]) => addRadarRow(n,v1,v2));
+}
+
+initDefaults();
+</script>
+</body>
+</html>
