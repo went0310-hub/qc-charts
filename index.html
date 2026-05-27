@@ -4,100 +4,116 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>品管圖形工具</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- 主要 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
-  :root {
-    --deep-navy:#0d1b2a; --panel:#162032; --panel-border:#1e3150;
-    --accent-cyan:#00bcd4; --text-primary:#e8f0fe; --text-secondary:#8faabe;
-    --text-muted:#4a6080; --input-bg:#0d1b2a; --input-border:#1e3a5f;
-    --input-focus:#1565C0; --shadow:0 4px 24px rgba(0,0,0,0.5);
-  }
+  :root{--deep-navy:#0d1b2a;--panel:#162032;--panel-border:#1e3150;--accent-cyan:#00bcd4;
+    --text-primary:#e8f0fe;--text-secondary:#8faabe;--text-muted:#4a6080;
+    --input-bg:#0d1b2a;--input-border:#1e3a5f;--input-focus:#1565C0;--shadow:0 4px 24px rgba(0,0,0,.5);}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Noto Sans TC',sans-serif;background:var(--deep-navy);color:var(--text-primary);min-height:100vh;
     background-image:radial-gradient(ellipse at 20% 10%,rgba(21,101,192,.12) 0%,transparent 50%),
-    radial-gradient(ellipse at 80% 90%,rgba(27,94,32,.08) 0%,transparent 50%);}
-  header{background:linear-gradient(135deg,#0d1b2a 0%,#162032 100%);border-bottom:1px solid var(--panel-border);
+      radial-gradient(ellipse at 80% 90%,rgba(27,94,32,.08) 0%,transparent 50%);}
+  header{background:linear-gradient(135deg,#0d1b2a,#162032);border-bottom:1px solid var(--panel-border);
     padding:20px 40px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;}
   .header-icon{width:40px;height:40px;background:linear-gradient(135deg,#1565C0,#00bcd4);border-radius:10px;
     display:flex;align-items:center;justify-content:center;font-size:20px;}
   header h1{font-weight:900;font-size:22px;letter-spacing:3px;
     background:linear-gradient(90deg,#e8f0fe,#00bcd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-  header span{color:var(--text-muted);font-size:13px;font-weight:300;letter-spacing:2px;margin-left:8px;padding-top:3px;}
+  header span{color:var(--text-muted);font-size:13px;font-weight:300;letter-spacing:2px;margin-left:8px;}
   .main-container{max-width:1500px;margin:0 auto;padding:30px 24px;}
   .tab-nav{display:flex;gap:4px;background:var(--panel);padding:6px;border-radius:14px;
-    border:1px solid var(--panel-border);margin-bottom:28px;}
-  .tab-btn{flex:1;padding:12px 16px;border:none;background:transparent;color:var(--text-secondary);
-    font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:10px;
-    transition:all .25s;letter-spacing:1px;}
+    border:1px solid var(--panel-border);margin-bottom:28px;flex-wrap:wrap;}
+  .tab-btn{flex:1;min-width:90px;padding:10px 8px;border:none;background:transparent;color:var(--text-secondary);
+    font-family:'Noto Sans TC',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border-radius:10px;
+    transition:all .25s;text-align:center;}
   .tab-btn:hover{background:rgba(21,101,192,.15);color:var(--text-primary);}
   .tab-btn.active{background:linear-gradient(135deg,#1565C0,#0d47a1);color:#fff;box-shadow:0 2px 12px rgba(21,101,192,.4);}
   .tab-content{display:none;}.tab-content.active{display:block;}
-  .chart-layout{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+  .chart-layout{display:grid;grid-template-columns:400px 1fr;gap:24px;align-items:start;}
   .panel{background:var(--panel);border:1px solid var(--panel-border);border-radius:16px;padding:20px;box-shadow:var(--shadow);}
   .panel-title{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--accent-cyan);text-transform:uppercase;
     margin-bottom:16px;display:flex;align-items:center;gap:8px;}
   .panel-title::before{content:'';display:inline-block;width:3px;height:16px;background:var(--accent-cyan);border-radius:2px;}
-  .form-group{margin-bottom:12px;}
-  label{display:block;font-size:11px;font-weight:500;color:var(--text-secondary);margin-bottom:5px;letter-spacing:.5px;}
+  .form-group{margin-bottom:10px;}
+  label{display:block;font-size:11px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;}
   input[type="text"],input[type="number"],select{width:100%;background:var(--input-bg);border:1px solid var(--input-border);
-    color:var(--text-primary);padding:7px 10px;border-radius:7px;font-family:'Noto Sans TC',sans-serif;font-size:12px;
-    outline:none;transition:border-color .2s,box-shadow .2s;}
-  input[type="color"]{width:100%;height:32px;background:var(--input-bg);border:1px solid var(--input-border);
+    color:var(--text-primary);padding:6px 10px;border-radius:7px;font-family:'Noto Sans TC',sans-serif;
+    font-size:12px;outline:none;transition:border-color .2s;}
+  input[type="color"]{width:100%;height:30px;background:var(--input-bg);border:1px solid var(--input-border);
     border-radius:7px;cursor:pointer;padding:2px 4px;}
+  input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:#1565C0;}
   input:focus,select:focus{border-color:var(--input-focus);box-shadow:0 0 0 3px rgba(21,101,192,.15);}
   select option{background:#162032;}
   .row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
   .row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;}
-  .divider{height:1px;background:var(--panel-border);margin:12px 0;}
+  .row-5{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:5px;}
+  .divider{height:1px;background:var(--panel-border);margin:10px 0;}
   .section-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;
-    letter-spacing:2px;margin-bottom:8px;margin-top:4px;}
+    letter-spacing:2px;margin-bottom:7px;margin-top:4px;}
   .color-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;}
   .chart-title-input{width:100%;background:rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.3);
-    color:var(--text-primary);padding:9px 12px;border-radius:8px;font-family:'Noto Sans TC',sans-serif;
-    font-size:14px;font-weight:500;outline:none;margin-bottom:12px;transition:border-color .2s;}
+    color:var(--text-primary);padding:8px 12px;border-radius:8px;font-family:'Noto Sans TC',sans-serif;
+    font-size:13px;font-weight:500;outline:none;margin-bottom:10px;}
   .chart-title-input:focus{border-color:var(--accent-cyan);}
-  .gen-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1565C0,#0d47a1);border:none;border-radius:10px;
+  .gen-btn{width:100%;padding:11px;background:linear-gradient(135deg,#1565C0,#0d47a1);border:none;border-radius:10px;
     color:#fff;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;
     margin-top:8px;transition:all .2s;box-shadow:0 4px 16px rgba(21,101,192,.3);}
-  .gen-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(21,101,192,.45);}
-  .dl-btn{width:100%;padding:9px;background:transparent;border:1px solid var(--panel-border);border-radius:8px;
-    color:var(--text-secondary);font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;
-    margin-top:6px;transition:all .2s;letter-spacing:1px;}
+  .gen-btn:hover{transform:translateY(-1px);}
+  .dl-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--panel-border);border-radius:8px;
+    color:var(--text-secondary);font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;margin-top:6px;}
   .dl-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);}
   .chart-wrapper{background:#fff;border:1px solid var(--panel-border);border-radius:16px;padding:28px;
-    box-shadow:var(--shadow);position:relative;min-height:460px;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;}
+    box-shadow:var(--shadow);min-height:460px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
   .chart-placeholder{text-align:center;color:#aaa;}
   .chart-placeholder .big-icon{font-size:48px;margin-bottom:12px;}
-  .chart-placeholder p{font-size:14px;letter-spacing:1px;}
+  .chart-placeholder p{font-size:14px;}
   canvas{max-width:100%;}
-  .chart-display-title{font-size:18px;font-weight:700;color:#000;text-align:center;margin-bottom:16px;
-    letter-spacing:1px;width:100%;}
-  /* scroll panel */
-  .scroll-panel{max-height:420px;overflow-y:auto;padding-right:4px;}
+  .chart-display-title{font-size:18px;font-weight:700;color:#000;text-align:center;margin-bottom:16px;width:100%;}
+  .scroll-panel{max-height:520px;overflow-y:auto;padding-right:4px;}
   .scroll-panel::-webkit-scrollbar{width:4px;}
-  .scroll-panel::-webkit-scrollbar-track{background:transparent;}
   .scroll-panel::-webkit-scrollbar-thumb{background:var(--panel-border);border-radius:2px;}
-  /* data rows */
-  .data-row{display:grid;gap:5px;align-items:center;margin-bottom:5px;background:rgba(255,255,255,.03);
-    border-radius:6px;padding:6px;}
-  .trend-data-row{grid-template-columns:1fr 90px 28px;}
-  .radar-data-row{grid-template-columns:1fr 70px 70px 28px;}
+  .data-row{display:grid;gap:4px;align-items:center;margin-bottom:4px;
+    background:rgba(255,255,255,.03);border-radius:6px;padding:5px;}
   .del-btn{background:rgba(183,28,28,.15);border:1px solid rgba(183,28,28,.3);color:#ef9a9a;
-    border-radius:5px;cursor:pointer;font-size:13px;padding:3px 0;width:100%;transition:all .2s;}
+    border-radius:5px;cursor:pointer;font-size:13px;padding:3px 0;width:100%;}
   .del-btn:hover{background:rgba(183,28,28,.35);}
-  .add-row-btn{width:100%;padding:7px;background:transparent;border:1px dashed var(--input-border);
+  .add-row-btn{width:100%;padding:6px;background:transparent;border:1px dashed var(--input-border);
     color:var(--text-secondary);border-radius:6px;cursor:pointer;font-size:12px;
-    font-family:'Noto Sans TC',sans-serif;transition:all .2s;margin-top:4px;}
+    font-family:'Noto Sans TC',sans-serif;margin-top:4px;}
   .add-row-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);}
   .style-section{background:rgba(0,188,212,.05);border:1px solid rgba(0,188,212,.15);
-    border-radius:10px;padding:12px;margin-top:10px;}
+    border-radius:10px;padding:10px;margin-top:10px;}
   .style-section-title{font-size:10px;font-weight:700;color:var(--accent-cyan);letter-spacing:2px;
-    text-transform:uppercase;margin-bottom:10px;}
-  @media(max-width:900px){.chart-layout{grid-template-columns:1fr;}header{padding:16px 20px;}
-    header h1{font-size:16px;}header span{display:none;}}
+    text-transform:uppercase;margin-bottom:8px;}
+  /* Legend section */
+  .legend-section{background:rgba(255,193,7,.05);border:1px solid rgba(255,193,7,.2);
+    border-radius:8px;padding:8px 10px;margin-top:8px;}
+  .legend-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .legend-row:last-child{margin-bottom:0;}
+  .legend-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+  .legend-row input[type="text"]{flex:1;font-size:11px;padding:4px 8px;}
+  .cb-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+  .cb-row label{font-size:11px;color:var(--text-secondary);margin:0;cursor:pointer;}
+  /* mode toggle */
+  .mode-toggle{display:flex;gap:6px;margin-bottom:10px;}
+  .mode-btn{flex:1;padding:7px;border:1px solid var(--input-border);background:transparent;
+    color:var(--text-secondary);border-radius:7px;cursor:pointer;font-size:12px;
+    font-family:'Noto Sans TC',sans-serif;}
+  .mode-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;}
+  /* pareto preview */
+  #pareto_preview table{width:100%;border-collapse:collapse;margin-top:4px;}
+  #pareto_preview th{background:rgba(0,188,212,.12);color:var(--accent-cyan);font-size:10px;
+    padding:4px 6px;text-align:right;border-bottom:1px solid var(--panel-border);}
+  #pareto_preview th:first-child{text-align:left;}
+  #pareto_preview td{padding:3px 6px;font-size:10px;color:var(--text-primary);text-align:right;
+    border-bottom:1px solid rgba(255,255,255,.04);}
+  #pareto_preview td:first-child{text-align:left;color:var(--text-secondary);}
+  #pareto_preview tr:last-child td{border-bottom:none;font-weight:700;color:var(--accent-cyan);}
+  @media(max-width:900px){.chart-layout{grid-template-columns:1fr;}
+    header{padding:16px 20px;}header h1{font-size:16px;}header span{display:none;}}
 </style>
 </head>
 <body>
@@ -111,11 +127,12 @@
     <button class="tab-btn active" onclick="switchTab('tab1')">📊 目標設定<br><small>直條圖</small></button>
     <button class="tab-btn" onclick="switchTab('tab2')">🔧 對策實施<br><small>直條圖</small></button>
     <button class="tab-btn" onclick="switchTab('tab3')">✅ 效果確認<br><small>直條圖</small></button>
-    <button class="tab-btn" onclick="switchTab('tab4')">📈 推移圖<br><small>折線圖</small></button>
+    <button class="tab-btn" onclick="switchTab('tab4')">📈 推移圖</button>
     <button class="tab-btn" onclick="switchTab('tab5')">🕸️ 雷達圖</button>
+    <button class="tab-btn" onclick="switchTab('tab6')">📉 柏拉圖</button>
   </div>
 
-  <!-- ===== TAB 1 ===== -->
+  <!-- TAB 1 -->
   <div id="tab1" class="tab-content active">
     <div class="chart-layout">
       <div class="panel">
@@ -123,62 +140,57 @@
         <div class="scroll-panel">
           <div class="form-group"><label>圖表標題</label>
             <input class="chart-title-input" id="t1_title" type="text" value="不良率改善目標"></div>
-
           <div class="section-label"><span class="color-dot" style="background:#1565C0"></span>改善前</div>
           <div class="form-group"><label>日期區間（X軸顯示）</label>
             <input type="text" id="t1_before_date" placeholder="例：10/17-10/30" value="10/17-10/30"></div>
           <div class="form-group"><label>數值</label>
             <input type="number" id="t1_before_val" value="8.5" step="any"></div>
-
           <div class="divider"></div>
           <div class="section-label"><span class="color-dot" style="background:#B71C1C"></span>目標值</div>
           <div class="form-group"><label>目標數值</label>
             <input type="number" id="t1_target_val" value="3.0" step="any"></div>
-
           <div class="divider"></div>
           <div class="row-2">
             <div class="form-group"><label>數值單位</label>
-              <select id="t1_unit">
-                <option value="percent">百分比 (%)</option>
-                <option value="permille">千分比 (‰)</option>
-                <option value="value">數值</option>
-                <option value="time">時間</option>
-              </select></div>
+              <select id="t1_unit"><option value="percent">百分比 (%)</option><option value="permille">千分比 (‰)</option>
+                <option value="value">數值</option><option value="time">時間</option></select></div>
             <div class="form-group"><label>小數位數</label>
-              <select id="t1_decimal">
-                <option value="0">0</option><option value="1" selected>1</option>
-                <option value="2">2</option><option value="3">3</option>
-              </select></div>
+              <select id="t1_decimal"><option value="0">0</option><option value="1" selected>1</option>
+                <option value="2">2</option><option value="3">3</option></select></div>
           </div>
+          <div class="form-group"><label>垂直軸標題</label><input type="text" id="t1_yaxis_title" value="不良率"></div>
           <div class="row-2">
-            <div class="form-group"><label>垂直軸標題</label>
-              <input type="text" id="t1_yaxis_title" value="不良率"></div>
-            <div class="form-group"><label>垂直軸最小值</label>
-              <input type="number" id="t1_ymin" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最小值</label><input type="number" id="t1_ymin" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最大值</label><input type="number" id="t1_ymax" placeholder="自動" step="any"></div>
           </div>
-          <div class="form-group"><label>垂直軸最大值</label>
-            <input type="number" id="t1_ymax" placeholder="自動" step="any"></div>
-
-          <!-- Style -->
           <div class="style-section">
             <div class="style-section-title">🎨 外觀設定</div>
-            <div class="row-4">
-              <div class="form-group"><label>標題大小</label>
-                <input type="number" id="t1_fs_title" value="18" min="10" max="40"></div>
-              <div class="form-group"><label>軸標題大小</label>
-                <input type="number" id="t1_fs_axis_title" value="14" min="8" max="30"></div>
-              <div class="form-group"><label>軸刻度大小</label>
-                <input type="number" id="t1_fs_tick" value="12" min="8" max="24"></div>
-              <div class="form-group"><label>數據標籤大小</label>
-                <input type="number" id="t1_fs_label" value="16" min="8" max="32"></div>
+            <div class="row-5">
+              <div class="form-group"><label>標題</label><input type="number" id="t1_fs_title" value="18" min="10" max="40"></div>
+              <div class="form-group"><label>軸標題</label><input type="number" id="t1_fs_axis_title" value="14" min="8" max="30"></div>
+              <div class="form-group"><label>軸刻度</label><input type="number" id="t1_fs_tick" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>X軸標籤</label><input type="number" id="t1_fs_xlabel" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>數據標籤</label><input type="number" id="t1_fs_label" value="16" min="8" max="32"></div>
             </div>
             <div class="row-3">
-              <div class="form-group"><label>文字顏色</label>
-                <input type="color" id="t1_text_color" value="#000000"></div>
-              <div class="form-group"><label>改善前顏色</label>
-                <input type="color" id="t1_col_before" value="#1565C0"></div>
-              <div class="form-group"><label>目標值顏色</label>
-                <input type="color" id="t1_col_target" value="#B71C1C"></div>
+              <div class="form-group"><label>文字顏色</label><input type="color" id="t1_text_color" value="#000000"></div>
+              <div class="form-group"><label>改善前顏色</label><input type="color" id="t1_col_before" value="#1565C0"></div>
+              <div class="form-group"><label>目標值顏色</label><input type="color" id="t1_col_target" value="#B71C1C"></div>
+            </div>
+            <!-- Legend -->
+            <div class="cb-row" style="margin-top:6px;">
+              <input type="checkbox" id="t1_show_legend">
+              <label for="t1_show_legend">顯示圖例</label>
+            </div>
+            <div class="legend-section" id="t1_legend_edit" style="display:none;">
+              <div class="legend-row">
+                <div class="legend-swatch" id="t1_sw_before" style="background:#1565C0"></div>
+                <input type="text" id="t1_ln_before" value="改善前" placeholder="改善前圖例名稱">
+              </div>
+              <div class="legend-row">
+                <div class="legend-swatch" id="t1_sw_target" style="background:#B71C1C"></div>
+                <input type="text" id="t1_ln_target" value="目標值" placeholder="目標值圖例名稱">
+              </div>
             </div>
           </div>
         </div>
@@ -193,7 +205,7 @@
     </div>
   </div>
 
-  <!-- ===== TAB 2 ===== -->
+  <!-- TAB 2 -->
   <div id="tab2" class="tab-content">
     <div class="chart-layout">
       <div class="panel">
@@ -201,61 +213,56 @@
         <div class="scroll-panel">
           <div class="form-group"><label>圖表標題</label>
             <input class="chart-title-input" id="t2_title" type="text" value="對策實施成效"></div>
-
           <div class="section-label"><span class="color-dot" style="background:#1565C0"></span>改善前</div>
           <div class="form-group"><label>日期區間（X軸顯示）</label>
             <input type="text" id="t2_before_date" placeholder="例：10/17-10/30" value="10/17-10/30"></div>
-          <div class="form-group"><label>數值</label>
-            <input type="number" id="t2_before_val" value="8.5" step="any"></div>
-
+          <div class="form-group"><label>數值</label><input type="number" id="t2_before_val" value="8.5" step="any"></div>
           <div class="divider"></div>
           <div class="section-label"><span class="color-dot" style="background:#2E7D32"></span>改善中</div>
           <div class="form-group"><label>日期區間（X軸顯示）</label>
             <input type="text" id="t2_during_date" placeholder="例：11/01-11/30" value="11/01-11/30"></div>
-          <div class="form-group"><label>數值</label>
-            <input type="number" id="t2_during_val" value="5.2" step="any"></div>
-
+          <div class="form-group"><label>數值</label><input type="number" id="t2_during_val" value="5.2" step="any"></div>
           <div class="divider"></div>
           <div class="row-2">
             <div class="form-group"><label>數值單位</label>
-              <select id="t2_unit">
-                <option value="percent">百分比 (%)</option><option value="permille">千分比 (‰)</option>
-                <option value="value">數值</option><option value="time">時間</option>
-              </select></div>
+              <select id="t2_unit"><option value="percent">百分比 (%)</option><option value="permille">千分比 (‰)</option>
+                <option value="value">數值</option><option value="time">時間</option></select></div>
             <div class="form-group"><label>小數位數</label>
-              <select id="t2_decimal">
-                <option value="0">0</option><option value="1" selected>1</option>
-                <option value="2">2</option><option value="3">3</option>
-              </select></div>
+              <select id="t2_decimal"><option value="0">0</option><option value="1" selected>1</option>
+                <option value="2">2</option><option value="3">3</option></select></div>
           </div>
+          <div class="form-group"><label>垂直軸標題</label><input type="text" id="t2_yaxis_title" value="不良率"></div>
           <div class="row-2">
-            <div class="form-group"><label>垂直軸標題</label>
-              <input type="text" id="t2_yaxis_title" value="不良率"></div>
-            <div class="form-group"><label>垂直軸最小值</label>
-              <input type="number" id="t2_ymin" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最小值</label><input type="number" id="t2_ymin" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最大值</label><input type="number" id="t2_ymax" placeholder="自動" step="any"></div>
           </div>
-          <div class="form-group"><label>垂直軸最大值</label>
-            <input type="number" id="t2_ymax" placeholder="自動" step="any"></div>
-
           <div class="style-section">
             <div class="style-section-title">🎨 外觀設定</div>
-            <div class="row-4">
-              <div class="form-group"><label>標題大小</label>
-                <input type="number" id="t2_fs_title" value="18" min="10" max="40"></div>
-              <div class="form-group"><label>軸標題大小</label>
-                <input type="number" id="t2_fs_axis_title" value="14" min="8" max="30"></div>
-              <div class="form-group"><label>軸刻度大小</label>
-                <input type="number" id="t2_fs_tick" value="12" min="8" max="24"></div>
-              <div class="form-group"><label>數據標籤大小</label>
-                <input type="number" id="t2_fs_label" value="16" min="8" max="32"></div>
+            <div class="row-5">
+              <div class="form-group"><label>標題</label><input type="number" id="t2_fs_title" value="18" min="10" max="40"></div>
+              <div class="form-group"><label>軸標題</label><input type="number" id="t2_fs_axis_title" value="14" min="8" max="30"></div>
+              <div class="form-group"><label>軸刻度</label><input type="number" id="t2_fs_tick" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>X軸標籤</label><input type="number" id="t2_fs_xlabel" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>數據標籤</label><input type="number" id="t2_fs_label" value="16" min="8" max="32"></div>
             </div>
             <div class="row-3">
-              <div class="form-group"><label>文字顏色</label>
-                <input type="color" id="t2_text_color" value="#000000"></div>
-              <div class="form-group"><label>改善前顏色</label>
-                <input type="color" id="t2_col_before" value="#1565C0"></div>
-              <div class="form-group"><label>改善中顏色</label>
-                <input type="color" id="t2_col_during" value="#2E7D32"></div>
+              <div class="form-group"><label>文字顏色</label><input type="color" id="t2_text_color" value="#000000"></div>
+              <div class="form-group"><label>改善前顏色</label><input type="color" id="t2_col_before" value="#1565C0"></div>
+              <div class="form-group"><label>改善中顏色</label><input type="color" id="t2_col_during" value="#2E7D32"></div>
+            </div>
+            <div class="cb-row" style="margin-top:6px;">
+              <input type="checkbox" id="t2_show_legend">
+              <label for="t2_show_legend">顯示圖例</label>
+            </div>
+            <div class="legend-section" id="t2_legend_edit" style="display:none;">
+              <div class="legend-row">
+                <div class="legend-swatch" style="background:#1565C0"></div>
+                <input type="text" id="t2_ln_before" value="改善前">
+              </div>
+              <div class="legend-row">
+                <div class="legend-swatch" style="background:#2E7D32"></div>
+                <input type="text" id="t2_ln_during" value="改善中">
+              </div>
             </div>
           </div>
         </div>
@@ -270,7 +277,7 @@
     </div>
   </div>
 
-  <!-- ===== TAB 3 ===== -->
+  <!-- TAB 3 -->
   <div id="tab3" class="tab-content">
     <div class="chart-layout">
       <div class="panel">
@@ -278,68 +285,55 @@
         <div class="scroll-panel">
           <div class="form-group"><label>圖表標題</label>
             <input class="chart-title-input" id="t3_title" type="text" value="改善效果確認"></div>
-
           <div class="section-label"><span class="color-dot" style="background:#1565C0"></span>改善前</div>
           <div class="form-group"><label>日期區間（X軸顯示）</label>
             <input type="text" id="t3_before_date" placeholder="例：10/17-10/30" value="10/17-10/30"></div>
-          <div class="form-group"><label>數值</label>
-            <input type="number" id="t3_before_val" value="8.5" step="any"></div>
-
+          <div class="form-group"><label>數值</label><input type="number" id="t3_before_val" value="8.5" step="any"></div>
           <div class="divider"></div>
           <div class="section-label"><span class="color-dot" style="background:#B71C1C"></span>目標值</div>
-          <div class="form-group"><label>目標數值</label>
-            <input type="number" id="t3_target_val" value="3.0" step="any"></div>
-
+          <div class="form-group"><label>目標數值</label><input type="number" id="t3_target_val" value="3.0" step="any"></div>
           <div class="divider"></div>
           <div class="section-label"><span class="color-dot" style="background:#2E7D32"></span>改善後</div>
           <div class="form-group"><label>日期區間（X軸顯示）</label>
             <input type="text" id="t3_after_date" placeholder="例：12/01-12/31" value="12/01-12/31"></div>
-          <div class="form-group"><label>數值</label>
-            <input type="number" id="t3_after_val" value="2.1" step="any"></div>
-
+          <div class="form-group"><label>數值</label><input type="number" id="t3_after_val" value="2.1" step="any"></div>
           <div class="divider"></div>
           <div class="row-2">
             <div class="form-group"><label>數值單位</label>
-              <select id="t3_unit">
-                <option value="percent">百分比 (%)</option><option value="permille">千分比 (‰)</option>
-                <option value="value">數值</option><option value="time">時間</option>
-              </select></div>
+              <select id="t3_unit"><option value="percent">百分比 (%)</option><option value="permille">千分比 (‰)</option>
+                <option value="value">數值</option><option value="time">時間</option></select></div>
             <div class="form-group"><label>小數位數</label>
-              <select id="t3_decimal">
-                <option value="0">0</option><option value="1" selected>1</option>
-                <option value="2">2</option><option value="3">3</option>
-              </select></div>
+              <select id="t3_decimal"><option value="0">0</option><option value="1" selected>1</option>
+                <option value="2">2</option><option value="3">3</option></select></div>
           </div>
+          <div class="form-group"><label>垂直軸標題</label><input type="text" id="t3_yaxis_title" value="不良率"></div>
           <div class="row-2">
-            <div class="form-group"><label>垂直軸標題</label>
-              <input type="text" id="t3_yaxis_title" value="不良率"></div>
-            <div class="form-group"><label>垂直軸最小值</label>
-              <input type="number" id="t3_ymin" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最小值</label><input type="number" id="t3_ymin" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最大值</label><input type="number" id="t3_ymax" placeholder="自動" step="any"></div>
           </div>
-          <div class="form-group"><label>垂直軸最大值</label>
-            <input type="number" id="t3_ymax" placeholder="自動" step="any"></div>
-
           <div class="style-section">
             <div class="style-section-title">🎨 外觀設定</div>
-            <div class="row-4">
-              <div class="form-group"><label>標題大小</label>
-                <input type="number" id="t3_fs_title" value="18" min="10" max="40"></div>
-              <div class="form-group"><label>軸標題大小</label>
-                <input type="number" id="t3_fs_axis_title" value="14" min="8" max="30"></div>
-              <div class="form-group"><label>軸刻度大小</label>
-                <input type="number" id="t3_fs_tick" value="12" min="8" max="24"></div>
-              <div class="form-group"><label>數據標籤大小</label>
-                <input type="number" id="t3_fs_label" value="16" min="8" max="32"></div>
+            <div class="row-5">
+              <div class="form-group"><label>標題</label><input type="number" id="t3_fs_title" value="18" min="10" max="40"></div>
+              <div class="form-group"><label>軸標題</label><input type="number" id="t3_fs_axis_title" value="14" min="8" max="30"></div>
+              <div class="form-group"><label>軸刻度</label><input type="number" id="t3_fs_tick" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>X軸標籤</label><input type="number" id="t3_fs_xlabel" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>數據標籤</label><input type="number" id="t3_fs_label" value="16" min="8" max="32"></div>
             </div>
             <div class="row-4">
-              <div class="form-group"><label>文字顏色</label>
-                <input type="color" id="t3_text_color" value="#000000"></div>
-              <div class="form-group"><label>改善前顏色</label>
-                <input type="color" id="t3_col_before" value="#1565C0"></div>
-              <div class="form-group"><label>目標值顏色</label>
-                <input type="color" id="t3_col_target" value="#B71C1C"></div>
-              <div class="form-group"><label>改善後顏色</label>
-                <input type="color" id="t3_col_after" value="#2E7D32"></div>
+              <div class="form-group"><label>文字顏色</label><input type="color" id="t3_text_color" value="#000000"></div>
+              <div class="form-group"><label>改善前顏色</label><input type="color" id="t3_col_before" value="#1565C0"></div>
+              <div class="form-group"><label>目標值顏色</label><input type="color" id="t3_col_target" value="#B71C1C"></div>
+              <div class="form-group"><label>改善後顏色</label><input type="color" id="t3_col_after" value="#2E7D32"></div>
+            </div>
+            <div class="cb-row" style="margin-top:6px;">
+              <input type="checkbox" id="t3_show_legend">
+              <label for="t3_show_legend">顯示圖例</label>
+            </div>
+            <div class="legend-section" id="t3_legend_edit" style="display:none;">
+              <div class="legend-row"><div class="legend-swatch" style="background:#1565C0"></div><input type="text" id="t3_ln_before" value="改善前"></div>
+              <div class="legend-row"><div class="legend-swatch" style="background:#B71C1C"></div><input type="text" id="t3_ln_target" value="目標值"></div>
+              <div class="legend-row"><div class="legend-swatch" style="background:#2E7D32"></div><input type="text" id="t3_ln_after" value="改善後"></div>
             </div>
           </div>
         </div>
@@ -354,7 +348,7 @@
     </div>
   </div>
 
-  <!-- ===== TAB 4 推移圖 ===== -->
+  <!-- TAB 4 推移圖 -->
   <div id="tab4" class="tab-content">
     <div class="chart-layout">
       <div class="panel">
@@ -364,63 +358,53 @@
             <input class="chart-title-input" id="t4_title" type="text" value="月別不良率推移"></div>
           <div class="row-2">
             <div class="form-group"><label>數值單位</label>
-              <select id="t4_unit">
-                <option value="percent">百分比 (%)</option><option value="permille">千分比 (‰)</option>
-                <option value="value">數值</option><option value="time">時間</option>
-              </select></div>
+              <select id="t4_unit"><option value="percent">百分比 (%)</option><option value="permille">千分比 (‰)</option>
+                <option value="value">數值</option><option value="time">時間</option></select></div>
             <div class="form-group"><label>小數位數</label>
-              <select id="t4_decimal">
-                <option value="0">0</option><option value="1" selected>1</option>
-                <option value="2">2</option><option value="3">3</option>
-              </select></div>
+              <select id="t4_decimal"><option value="0">0</option><option value="1" selected>1</option>
+                <option value="2">2</option><option value="3">3</option></select></div>
           </div>
-          <div class="form-group"><label>垂直軸標題</label>
-            <input type="text" id="t4_yaxis_title" value="不良率"></div>
+          <div class="form-group"><label>垂直軸標題</label><input type="text" id="t4_yaxis_title" value="不良率"></div>
           <div class="row-2">
-            <div class="form-group"><label>垂直軸最小值</label>
-              <input type="number" id="t4_ymin" placeholder="自動" step="any"></div>
-            <div class="form-group"><label>垂直軸最大值</label>
-              <input type="number" id="t4_ymax" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最小值</label><input type="number" id="t4_ymin" placeholder="自動" step="any"></div>
+            <div class="form-group"><label>垂直軸最大值</label><input type="number" id="t4_ymax" placeholder="自動" step="any"></div>
           </div>
-
           <div class="divider"></div>
           <div class="section-label">目標線設定</div>
           <div class="row-2">
             <div class="form-group"><label>目標值（留空不顯示）</label>
               <input type="number" id="t4_target" placeholder="例：3.0" step="any"></div>
             <div class="form-group"><label>從第幾點開始（1起算）</label>
-              <input type="number" id="t4_target_start" placeholder="例：4" min="1" value="1"></div>
+              <input type="number" id="t4_target_start" value="1" min="1"></div>
           </div>
-
           <div class="divider"></div>
           <div class="section-label">資料點</div>
-          <div style="display:grid;grid-template-columns:1fr 90px 28px;gap:5px;margin-bottom:4px;">
+          <div style="display:grid;grid-template-columns:1fr 90px 28px;gap:4px;margin-bottom:4px;">
             <span style="font-size:10px;color:var(--text-muted);">標籤</span>
-            <span style="font-size:10px;color:var(--text-muted);">數值</span>
-            <span></span>
-          </div>
+            <span style="font-size:10px;color:var(--text-muted);">數值</span><span></span></div>
           <div id="trend_points"></div>
           <button class="add-row-btn" onclick="addTrendRow()">＋ 新增資料點</button>
-
-          <div class="style-section" style="margin-top:12px;">
+          <div class="style-section" style="margin-top:10px;">
             <div class="style-section-title">🎨 外觀設定</div>
-            <div class="row-4">
-              <div class="form-group"><label>標題大小</label>
-                <input type="number" id="t4_fs_title" value="18" min="10" max="40"></div>
-              <div class="form-group"><label>軸標題大小</label>
-                <input type="number" id="t4_fs_axis_title" value="14" min="8" max="30"></div>
-              <div class="form-group"><label>軸刻度大小</label>
-                <input type="number" id="t4_fs_tick" value="12" min="8" max="24"></div>
-              <div class="form-group"><label>數據標籤大小</label>
-                <input type="number" id="t4_fs_label" value="13" min="8" max="32"></div>
+            <div class="row-5">
+              <div class="form-group"><label>標題</label><input type="number" id="t4_fs_title" value="18" min="10" max="40"></div>
+              <div class="form-group"><label>軸標題</label><input type="number" id="t4_fs_axis_title" value="14" min="8" max="30"></div>
+              <div class="form-group"><label>軸刻度</label><input type="number" id="t4_fs_tick" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>X軸標籤</label><input type="number" id="t4_fs_xlabel" value="12" min="8" max="24"></div>
+              <div class="form-group"><label>數據標籤</label><input type="number" id="t4_fs_label" value="13" min="8" max="32"></div>
             </div>
             <div class="row-3">
-              <div class="form-group"><label>文字顏色</label>
-                <input type="color" id="t4_text_color" value="#000000"></div>
-              <div class="form-group"><label>折線顏色</label>
-                <input type="color" id="t4_col_line" value="#1565C0"></div>
-              <div class="form-group"><label>目標線顏色</label>
-                <input type="color" id="t4_col_target" value="#B71C1C"></div>
+              <div class="form-group"><label>文字顏色</label><input type="color" id="t4_text_color" value="#000000"></div>
+              <div class="form-group"><label>折線顏色</label><input type="color" id="t4_col_line" value="#1565C0"></div>
+              <div class="form-group"><label>目標線顏色</label><input type="color" id="t4_col_target" value="#B71C1C"></div>
+            </div>
+            <div class="cb-row" style="margin-top:6px;">
+              <input type="checkbox" id="t4_show_legend" checked>
+              <label for="t4_show_legend">顯示圖例</label>
+            </div>
+            <div class="legend-section" id="t4_legend_edit">
+              <div class="legend-row"><div class="legend-swatch" style="background:#1565C0"></div><input type="text" id="t4_ln_line" value="實績"></div>
+              <div class="legend-row"><div class="legend-swatch" style="background:#B71C1C"></div><input type="text" id="t4_ln_target" value="目標線"></div>
             </div>
           </div>
         </div>
@@ -435,7 +419,7 @@
     </div>
   </div>
 
-  <!-- ===== TAB 5 雷達圖 ===== -->
+  <!-- TAB 5 雷達圖 -->
   <div id="tab5" class="tab-content">
     <div class="chart-layout">
       <div class="panel">
@@ -444,46 +428,36 @@
           <div class="form-group"><label>圖表標題</label>
             <input class="chart-title-input" id="t5_title" type="text" value="品質特性評估"></div>
           <div class="row-2">
-            <div class="form-group"><label>系列1名稱</label>
-              <input type="text" id="t5_s1_name" value="改善前"></div>
-            <div class="form-group"><label>系列2名稱（選填）</label>
-              <input type="text" id="t5_s2_name" value="改善後"></div>
+            <div class="form-group"><label>最小刻度值</label><input type="number" id="t5_min" value="0" step="any"></div>
+            <div class="form-group"><label>最大刻度值</label><input type="number" id="t5_max" value="10" step="any"></div>
           </div>
-          <div class="row-2">
-            <div class="form-group"><label>最小刻度值</label>
-              <input type="number" id="t5_min" value="0" step="any"></div>
-            <div class="form-group"><label>最大刻度值</label>
-              <input type="number" id="t5_max" value="10" step="any"></div>
-          </div>
-
           <div class="divider"></div>
           <div class="section-label">評估項目</div>
-          <div style="display:grid;grid-template-columns:1fr 70px 70px 28px;gap:5px;margin-bottom:4px;">
+          <div style="display:grid;grid-template-columns:1fr 65px 65px 28px;gap:4px;margin-bottom:4px;">
             <span style="font-size:10px;color:var(--text-muted);">項目名稱</span>
             <span style="font-size:10px;color:var(--text-muted);">系列1</span>
-            <span style="font-size:10px;color:var(--text-muted);">系列2</span>
-            <span></span>
-          </div>
+            <span style="font-size:10px;color:var(--text-muted);">系列2</span><span></span></div>
           <div id="radar_items"></div>
           <button class="add-row-btn" onclick="addRadarRow()">＋ 新增評估項目</button>
-
-          <div class="style-section" style="margin-top:12px;">
+          <div class="style-section" style="margin-top:10px;">
             <div class="style-section-title">🎨 外觀設定</div>
             <div class="row-3">
-              <div class="form-group"><label>標題大小</label>
-                <input type="number" id="t5_fs_title" value="18" min="10" max="40"></div>
-              <div class="form-group"><label>標籤大小</label>
-                <input type="number" id="t5_fs_label" value="13" min="8" max="24"></div>
-              <div class="form-group"><label>刻度大小</label>
-                <input type="number" id="t5_fs_tick" value="11" min="8" max="20"></div>
+              <div class="form-group"><label>標題大小</label><input type="number" id="t5_fs_title" value="18" min="10" max="40"></div>
+              <div class="form-group"><label>標籤大小</label><input type="number" id="t5_fs_label" value="13" min="8" max="24"></div>
+              <div class="form-group"><label>刻度大小</label><input type="number" id="t5_fs_tick" value="11" min="8" max="20"></div>
             </div>
             <div class="row-3">
-              <div class="form-group"><label>文字顏色</label>
-                <input type="color" id="t5_text_color" value="#000000"></div>
-              <div class="form-group"><label>系列1顏色</label>
-                <input type="color" id="t5_col_s1" value="#1565C0"></div>
-              <div class="form-group"><label>系列2顏色</label>
-                <input type="color" id="t5_col_s2" value="#2E7D32"></div>
+              <div class="form-group"><label>文字顏色</label><input type="color" id="t5_text_color" value="#000000"></div>
+              <div class="form-group"><label>系列1顏色</label><input type="color" id="t5_col_s1" value="#1565C0"></div>
+              <div class="form-group"><label>系列2顏色</label><input type="color" id="t5_col_s2" value="#2E7D32"></div>
+            </div>
+            <div class="cb-row" style="margin-top:6px;">
+              <input type="checkbox" id="t5_show_legend" checked>
+              <label for="t5_show_legend">顯示圖例</label>
+            </div>
+            <div class="legend-section" id="t5_legend_edit">
+              <div class="legend-row"><div class="legend-swatch" style="background:#1565C0"></div><input type="text" id="t5_ln_s1" value="改善前"></div>
+              <div class="legend-row"><div class="legend-swatch" style="background:#2E7D32"></div><input type="text" id="t5_ln_s2" value="改善後"></div>
             </div>
           </div>
         </div>
@@ -497,70 +471,187 @@
       </div>
     </div>
   </div>
-</div>
+
+  <!-- TAB 6 柏拉圖 -->
+  <div id="tab6" class="tab-content">
+    <div class="chart-layout" style="grid-template-columns:420px 1fr;">
+      <div class="panel">
+        <div class="panel-title">柏拉圖 · 資料輸入</div>
+        <div class="scroll-panel" style="max-height:620px;">
+          <div class="form-group"><label>圖表標題</label>
+            <input class="chart-title-input" id="t6_title" type="text" value="不良原因柏拉圖"></div>
+          <div class="section-label">圖表模式</div>
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="mode_btn_before" onclick="setParetoMode('before')">📊 改善前柏拉圖</button>
+            <button class="mode-btn" id="mode_btn_compare" onclick="setParetoMode('compare')">📊 改善後柏拉圖</button>
+          </div>
+          <div class="divider"></div>
+          <div class="row-2">
+            <div class="form-group"><label>左軸標題（次數）</label><input type="text" id="t6_yaxis_left" value="次數"></div>
+            <div class="form-group"><label>右軸標題（累計%）</label><input type="text" id="t6_yaxis_right" value="累計比率(%)"></div>
+          </div>
+          <div class="form-group"><label>左軸最大值（留空=自動=加總）</label>
+            <input type="number" id="t6_ymax" placeholder="自動" step="any"></div>
+          <div class="divider"></div>
+          <!-- before rows -->
+          <div id="pareto_section_before">
+            <div class="section-label" style="color:#64b5f6;">▸ 改善前 資料輸入</div>
+            <div style="display:grid;grid-template-columns:1fr 80px 28px;gap:4px;margin-bottom:4px;">
+              <span style="font-size:10px;color:var(--text-muted);">項目名稱</span>
+              <span style="font-size:10px;color:var(--text-muted);">次數</span><span></span></div>
+            <div id="pareto_rows_before"></div>
+            <button class="add-row-btn" onclick="addParetoRowBefore()">＋ 新增項目</button>
+          </div>
+          <!-- compare rows -->
+          <div id="pareto_section_compare" style="display:none;">
+            <div class="section-label" style="color:#64b5f6;">▸ 改善前 / 改善後 資料輸入</div>
+            <div style="display:grid;grid-template-columns:1fr 70px 70px 28px;gap:4px;margin-bottom:4px;">
+              <span style="font-size:10px;color:var(--text-muted);">項目名稱</span>
+              <span style="font-size:10px;color:var(--text-muted);">改善前</span>
+              <span style="font-size:10px;color:var(--text-muted);">改善後</span><span></span></div>
+            <div id="pareto_rows_compare"></div>
+            <button class="add-row-btn" onclick="addParetoRowCompare()">＋ 新增項目</button>
+          </div>
+          <!-- live preview -->
+          <div class="divider"></div>
+          <div class="section-label" style="color:#a5d6a7;">▸ 自動計算預覽（依次數排序）</div>
+          <div id="pareto_preview"><em style="color:var(--text-muted);font-size:11px;">輸入次數後自動更新</em></div>
+          <!-- style -->
+          <div class="style-section">
+            <div class="style-section-title">🎨 外觀設定</div>
+            <div class="row-5">
+              <div class="form-group"><label>標題</label><input type="number" id="t6_fs_title" value="18" min="10" max="40"></div>
+              <div class="form-group"><label>軸標題</label><input type="number" id="t6_fs_axis_title" value="13" min="8" max="30"></div>
+              <div class="form-group"><label>軸刻度</label><input type="number" id="t6_fs_tick" value="11" min="8" max="24"></div>
+              <div class="form-group"><label>X軸標籤</label><input type="number" id="t6_fs_xlabel" value="11" min="8" max="24"></div>
+              <div class="form-group"><label>數據標籤</label><input type="number" id="t6_fs_label" value="12" min="8" max="24"></div>
+            </div>
+            <div class="row-2">
+              <div class="form-group"><label>文字顏色</label><input type="color" id="t6_text_color" value="#000000"></div>
+              <div class="form-group"><label>累計線顏色</label><input type="color" id="t6_col_line" value="#E65100"></div>
+            </div>
+            <div class="cb-row" style="margin-top:6px;">
+              <input type="checkbox" id="t6_show_legend" checked>
+              <label for="t6_show_legend">顯示圖例</label>
+            </div>
+            <div class="legend-section" id="t6_legend_edit">
+              <div class="legend-row"><div class="legend-swatch" style="background:#1565C0"></div><input type="text" id="t6_ln_before" value="改善前次數"></div>
+              <div class="legend-row"><div class="legend-swatch" style="background:#2E7D32"></div><input type="text" id="t6_ln_after" value="改善後次數"></div>
+              <div style="height:4px"></div>
+              <div class="legend-row">
+                <div style="width:14px;height:3px;background:#E65100;border-radius:2px;flex-shrink:0;margin-right:2px;"></div>
+                <input type="text" id="t6_ln_cum1" value="改善前累計%">
+              </div>
+              <div class="legend-row">
+                <div style="width:14px;height:3px;background:#2E7D32;border-radius:2px;flex-shrink:0;margin-right:2px;border-top:2px dashed #2E7D32;background:transparent;"></div>
+                <input type="text" id="t6_ln_cum2" value="改善後累計%">
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="gen-btn" onclick="generateChart6()">▶ 生成圖表</button>
+        <button class="dl-btn" onclick="downloadChart('chart6')">⬇ 下載 JPG</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="chart-wrapper" id="wrap6">
+          <div class="chart-placeholder" id="placeholder6"><div class="big-icon">📉</div><p>輸入資料後點擊「生成圖表」</p></div>
+          <div id="chart6_title" class="chart-display-title" style="display:none"></div>
+          <canvas id="chart6" style="display:none"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- end main-container -->
 
 <script>
+window.addEventListener('DOMContentLoaded', function() {
 // ===== GLOBALS =====
 const chartInstances = {};
 const GRID_MAIN = 'rgb(242,242,242)';
 const GRID_NONE = 'rgba(0,0,0,0)';
+let paretoMode = 'before';
 Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+
+// Per-item palette for pareto
+const PARETO_PALETTE = [
+  '#1565C0','#2E7D32','#C62828','#F57F17','#6A1B9A',
+  '#00838F','#4E342E','#37474F','#AD1457','#0277BD'
+];
+
+// ===== LEGEND TOGGLE =====
+function initLegendToggle(n, editId) {
+  const cb = document.getElementById('t'+n+'_show_legend');
+  const ed = document.getElementById(editId || ('t'+n+'_legend_edit'));
+  if (!cb || !ed) return;
+  const update = () => { ed.style.display = cb.checked ? '' : 'none'; };
+  cb.addEventListener('change', update);
+  update();
+}
 
 // ===== TAB =====
 function switchTab(id) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.tab-btn')[parseInt(id.replace('tab',''))-1].classList.add('active');
 }
 
-// ===== UNIT =====
-function getUnitSuffix(unit) {
-  if (unit==='percent') return '%';
-  if (unit==='permille') return '‰';
-  return '';
-}
-function formatVal(val, unit, decimal) {
-  return parseFloat(val).toFixed(parseInt(decimal)) + getUnitSuffix(unit);
+// ===== PARETO MODE =====
+function setParetoMode(mode) {
+  paretoMode = mode;
+  document.getElementById('mode_btn_before').classList.toggle('active', mode==='before');
+  document.getElementById('mode_btn_compare').classList.toggle('active', mode==='compare');
+  document.getElementById('pareto_section_before').style.display  = mode==='before'  ? '' : 'none';
+  document.getElementById('pareto_section_compare').style.display = mode==='compare' ? '' : 'none';
+  updateParetoPreview();
 }
 
+// ===== UNIT =====
+function getUnitSuffix(u){if(u==='percent')return'%';if(u==='permille')return'‰';return'';}
+function formatVal(v,u,d){return parseFloat(v).toFixed(parseInt(d))+getUnitSuffix(u);}
+
 // ===== HELPERS =====
-function destroyChart(id) { if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
-function showChart(id) {
-  const n = id.replace('chart','');
+function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+function showChart(id){
+  const n=id.replace('chart','');
   document.getElementById('placeholder'+n).style.display='none';
   document.getElementById(id+'_title').style.display='block';
   document.getElementById(id).style.display='block';
 }
-function gv(id) { return document.getElementById(id).value; }
-function gn(id) { const v=parseFloat(gv(id)); return isNaN(v)?undefined:v; }
-function gi(id) { const v=parseInt(gv(id)); return isNaN(v)?14:v; }
-function getYBounds(minId, maxId) {
-  const mn = gn(minId), mx = gn(maxId);
-  return { min: mn, max: mx };
-}
-function hexToRgba(hex, alpha) {
-  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+function gv(id){return document.getElementById(id)?.value||'';}
+function gn(id){const v=parseFloat(gv(id));return isNaN(v)?undefined:v;}
+function gi(id){const v=parseInt(gv(id));return isNaN(v)?12:v;}
+function gb(id){return document.getElementById(id)?.checked||false;}
+function getYBounds(a,b){return{min:gn(a),max:gn(b)};}
+function hexToRgba(h,a){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;}
+function setTitle(id,txt,sz,col){const e=document.getElementById(id+'_title');e.textContent=txt;e.style.fontSize=sz+'px';e.style.color=col;}
 
-// ===== DATA LABELS PLUGIN =====
-const dataLabelsPlugin = {
-  id: 'customDataLabels',
-  afterDatasetsDraw(chart) {
-    if (chart.config.type==='radar'||chart.config.type==='line') return;
-    const { ctx } = chart;
-    const fsLabel = chart._qcFsLabel || 16;
-    const textColor = chart._qcTextColor || '#000000';
-    chart.data.datasets.forEach((dataset, i) => {
-      chart.getDatasetMeta(i).data.forEach((bar, idx) => {
-        const val = dataset.data[idx];
-        if (val===null||val===undefined) return;
+// ===== PLUGINS =====
+// Data labels (bar charts)
+const dataLabelsPlugin={
+  id:'customDataLabels',
+  afterDatasetsDraw(chart){
+    if(chart.config.type==='radar'||chart.config.type==='line')return;
+    const{ctx}=chart;
+    const fs=chart._qcFsLabel||16,tc=chart._qcTextColor||'#000';
+    chart.data.datasets.forEach((ds,i)=>{
+      if(ds.type==='line')return;
+      chart.getDatasetMeta(i).data.forEach((bar,idx)=>{
+        const val=ds.data[idx];
+        if(val===null||val===undefined)return;
         ctx.save();
-        ctx.font = `700 ${fsLabel}px 'Noto Sans TC', sans-serif`;
-        ctx.fillStyle = textColor;
-        ctx.textAlign = 'center';
-        ctx.fillText(formatVal(val, chart._qcUnit||'value', chart._qcDecimal||'1'), bar.x, bar.y-10);
+        ctx.font=`700 ${fs}px 'Noto Sans TC',sans-serif`;
+        ctx.fillStyle=tc;ctx.textAlign='center';
+        if(chart._paretoTotal1){
+          if(val===null)return;
+          const tot=ds.label&&ds.label.includes('後')?chart._paretoTotal2:chart._paretoTotal1;
+          const pct=Math.round(val/tot*1000)/10;
+          ctx.fillText(`${val}`,bar.x,bar.y-18);
+          ctx.font=`500 ${Math.max(fs-3,9)}px 'Noto Sans TC',sans-serif`;
+          ctx.fillText(`(${pct}%)`,bar.x,bar.y-6);
+        } else {
+          ctx.fillText(formatVal(val,chart._qcUnit||'value',chart._qcDecimal||'0'),bar.x,bar.y-8);
+        }
         ctx.restore();
       });
     });
@@ -568,400 +659,558 @@ const dataLabelsPlugin = {
 };
 Chart.register(dataLabelsPlugin);
 
-// ===== VERTICAL Y TITLE PLUGIN =====
-const verticalYTitlePlugin = {
-  id: 'verticalYTitle',
-  afterDraw(chart) {
-    const yAxis = chart.scales['y'];
-    if (!yAxis) return;
-    const text = chart._qcYTitle;
-    if (!text) return;
-    const { ctx } = chart;
-    const fontSize = chart._qcFsAxisTitle || 14;
-    const textColor = chart._qcTextColor || '#000000';
-    ctx.save();
-    ctx.font = `600 ${fontSize}px 'Noto Sans TC', sans-serif`;
-    ctx.fillStyle = textColor;
-    ctx.textAlign = 'center';
-    const x = yAxis.left - 26;
-    const centerY = (yAxis.top + yAxis.bottom) / 2;
-    const lineH = fontSize + 4;
-    const chars = [...text];
-    const totalH = chars.length * lineH;
-    chars.forEach((ch, i) => {
-      ctx.fillText(ch, x, centerY - totalH/2 + i*lineH + fontSize/2);
-    });
+// Vertical Y-axis title
+const verticalYTitlePlugin={
+  id:'verticalYTitle',
+  afterDraw(chart){
+    const yAxis=chart.scales['y'];if(!yAxis)return;
+    const text=chart._qcYTitle;if(!text)return;
+    const{ctx}=chart,fs=chart._qcFsAxisTitle||14,tc=chart._qcTextColor||'#000';
+    ctx.save();ctx.font=`600 ${fs}px 'Noto Sans TC',sans-serif`;
+    ctx.fillStyle=tc;ctx.textAlign='center';
+    const x=yAxis.left-26,cy=(yAxis.top+yAxis.bottom)/2,lh=fs+4,chars=[...text],th=chars.length*lh;
+    chars.forEach((c,i)=>ctx.fillText(c,x,cy-th/2+i*lh+fs/2));
     ctx.restore();
   }
 };
 Chart.register(verticalYTitlePlugin);
 
+// Custom bottom legend for pareto
+const paretoLegendPlugin={
+  id:'paretoLegend',
+  afterDraw(chart){
+    if(!chart._cumPct1)return;
+    if(!chart._showLegend)return;
+    const{ctx}=chart;
+    const ll=chart._legendLabels||{};
+    const tc=chart._tcLegend||'#000';
+    const fs=chart._fsLegend||12;
+    const isCompare=!!chart._cumPct2;
+
+    // Build entries
+    const entries=[];
+    const firstColor=(Array.isArray(chart.data.datasets[0]?.backgroundColor)
+      ?chart.data.datasets[0].backgroundColor[0]
+      :chart.data.datasets[0]?.backgroundColor)||'#1565C0';
+
+    if(!isCompare){
+      // before mode: one bar entry + one line entry
+      entries.push({color:firstColor,label:ll.lnB||'改善前次數',bar:true,faded:false});
+      entries.push({color:chart._colLine1,label:ll.lnC1||'改善前累計%',bar:false,dash:false});
+    } else {
+      // compare mode: only after bar + after cumulative line (no before line)
+      entries.push({color:firstColor,label:ll.lnA||'改善後次數',bar:true,faded:false});
+      entries.push({color:chart._colLine2,label:ll.lnC2||'改善後累計%',bar:false,dash:false});
+    }
+
+    ctx.save();
+    ctx.font=`${fs}px 'Noto Sans TC',sans-serif`;
+    ctx.textBaseline='middle';
+    const swW=16,swH=12,gap=6,space=18;
+    let totalW=0;
+    entries.forEach(e=>{totalW+=swW+gap+ctx.measureText(e.label).width+space;});
+    totalW-=space;
+    const y=chart.height-16;
+    let x=(chart.width-totalW)/2;
+    entries.forEach(e=>{
+      ctx.save();
+      if(e.bar){
+        ctx.fillStyle=e.faded?hexToRgba(e.color,.5):e.color;
+        ctx.fillRect(x,y-swH/2,swW,swH);
+      } else {
+        ctx.strokeStyle=e.color;ctx.lineWidth=2.5;
+        if(e.dash)ctx.setLineDash([5,3]);else ctx.setLineDash([]);
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+swW,y);ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(x+swW/2,y,3.5,0,Math.PI*2);ctx.fillStyle=e.color;ctx.fill();
+      }
+      x+=swW+gap;
+      ctx.fillStyle=tc;ctx.fillText(e.label,x,y);
+      x+=ctx.measureText(e.label).width+space;
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+};
+Chart.register(paretoLegendPlugin);
+
 // ===== BAR CONFIG =====
-function barConfig(labels, datasets, opts) {
-  const { yTitle, unit, decimal, ymin, ymax, fsAxisTitle, fsTick, textColor } = opts;
-  return {
-    type: 'bar',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => formatVal(ctx.raw, unit, decimal) } }
+function barConfig(labels,datasets,opts){
+  const{yTitle,unit,decimal,ymin,ymax,fsAxisTitle,fsTick,fsXLabel,textColor,showLegend,bottomPad}=opts;
+  return{
+    type:'bar',data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{
+        legend:{display:false}, // always off — custom plugin handles it
+        tooltip:{callbacks:{label:ctx=>formatVal(ctx.raw,unit,decimal)}}
       },
-      layout: { padding: { top: 36, right: 24, left: 48, bottom: 10 } },
-      scales: {
-        x: {
-          ticks: { font: { size: fsTick }, color: textColor, maxRotation: 0 },
-          title: { display: false },
-          grid: { drawOnChartArea: false, drawTicks: true, color: GRID_NONE },
-          border: { color: '#ccc' }
-        },
-        y: {
-          min: ymin, max: ymax,
-          ticks: { font: { size: fsTick }, color: textColor, callback: v => formatVal(v, unit, decimal) },
-          title: { display: false, text: yTitle },
-          grid: { color: ctx => ctx.tick.value===0 ? '#bbb' : GRID_MAIN, lineWidth: 1, drawTicks: false },
-          border: { color: '#ccc', dash: [] }
-        }
+      layout:{padding:{top:36,right:24,left:48,bottom:bottomPad||10}},
+      scales:{
+        x:{ticks:{font:{size:fsXLabel||12},color:textColor,maxRotation:0},
+          title:{display:false},grid:{drawOnChartArea:false,color:GRID_NONE},border:{color:'#ccc'}},
+        y:{min:ymin,max:ymax,
+          ticks:{font:{size:fsTick},color:textColor,callback:v=>formatVal(v,unit,decimal)},
+          title:{display:false,text:yTitle},
+          grid:{color:ctx=>ctx.tick.value===0?'#bbb':GRID_MAIN,lineWidth:1,drawTicks:false},
+          border:{color:'#ccc'}}
       }
     }
   };
 }
 
-function makeLabel(prefix, dateStr) {
-  if (!dateStr) return prefix;
-  return prefix + '\n' + dateStr;
-}
-
-function applyChartMeta(chart, opts) {
-  chart._qcUnit = opts.unit;
-  chart._qcDecimal = opts.decimal;
-  chart._qcYTitle = opts.yTitle;
-  chart._qcFsLabel = opts.fsLabel;
-  chart._qcFsAxisTitle = opts.fsAxisTitle;
-  chart._qcTextColor = opts.textColor;
+// Custom legend plugin for bar charts (draws colour boxes + labels at bottom)
+const barLegendPlugin={
+  id:'barLegend',
+  afterDraw(chart){
+    const entries=chart._qcLegendEntries;
+    if(!entries||!entries.length)return;
+    const{ctx}=chart;
+    const tc=chart._qcTextColor||'#000';
+    const fs=12;
+    ctx.save();
+    ctx.font=`${fs}px 'Noto Sans TC',sans-serif`;
+    ctx.textBaseline='middle';
+    const swW=16,swH=12,gap=6,space=20;
+    let totalW=0;
+    entries.forEach(e=>{totalW+=swW+gap+ctx.measureText(e.label).width+space;});
+    totalW-=space;
+    const y=chart.height-16;
+    let x=(chart.width-totalW)/2;
+    entries.forEach(e=>{
+      ctx.fillStyle=e.color;
+      ctx.fillRect(x,y-swH/2,swW,swH);
+      x+=swW+gap;
+      ctx.fillStyle=tc;
+      ctx.fillText(e.label,x,y);
+      x+=ctx.measureText(e.label).width+space;
+    });
+    ctx.restore();
+  }
+};
+Chart.register(barLegendPlugin);
+function makeLabel(prefix,date){if(!date)return prefix;return prefix+'\n'+date;}
+function applyMeta(chart,opts){
+  chart._qcUnit=opts.unit;chart._qcDecimal=opts.decimal;chart._qcYTitle=opts.yTitle;
+  chart._qcFsLabel=opts.fsLabel;chart._qcFsAxisTitle=opts.fsAxisTitle;chart._qcTextColor=opts.textColor;
 }
 
 // ===== CHART 1 =====
-function generateChart1() {
-  const beforeDate = gv('t1_before_date').trim();
-  const beforeVal  = parseFloat(gv('t1_before_val'));
-  const targetVal  = parseFloat(gv('t1_target_val'));
-  const unit = gv('t1_unit'), decimal = gv('t1_decimal');
-  const chartTitle = gv('t1_title') || '目標設定';
-  const yTitle = gv('t1_yaxis_title');
-  const colBefore = gv('t1_col_before'), colTarget = gv('t1_col_target');
-  const textColor = gv('t1_text_color');
-  const fsTitle = gi('t1_fs_title'), fsAxisTitle = gi('t1_fs_axis_title');
-  const fsTick = gi('t1_fs_tick'), fsLabel = gi('t1_fs_label');
-  const { min: ymin, max: ymax } = getYBounds('t1_ymin','t1_ymax');
-
-  if (isNaN(beforeVal)||isNaN(targetVal)) { alert('請輸入有效數值'); return; }
-  destroyChart('chart1'); showChart('chart1');
-
-  const titleEl = document.getElementById('chart1_title');
-  titleEl.textContent = chartTitle;
-  titleEl.style.fontSize = fsTitle + 'px';
-  titleEl.style.color = textColor;
-
-  const labels = [makeLabel('改善前', beforeDate), '目標值'];
-  const cfg = barConfig(labels, [{
-    data: [beforeVal, targetVal],
-    backgroundColor: [colBefore, colTarget],
-    borderRadius: 4, borderSkipped: false, barPercentage: 0.45,
-  }], { yTitle, unit, decimal, ymin, ymax, fsAxisTitle, fsTick, textColor });
-
-  const chart = new Chart(document.getElementById('chart1').getContext('2d'), cfg);
-  applyChartMeta(chart, { unit, decimal, yTitle, fsLabel, fsAxisTitle, textColor });
-  chartInstances['chart1'] = chart;
+function generateChart1(){
+  const bDate=gv('t1_before_date').trim(),bVal=parseFloat(gv('t1_before_val')),tVal=parseFloat(gv('t1_target_val'));
+  const unit=gv('t1_unit'),dec=gv('t1_decimal'),title=gv('t1_title')||'目標設定',yTitle=gv('t1_yaxis_title');
+  const cB=gv('t1_col_before'),cT=gv('t1_col_target'),tc=gv('t1_text_color');
+  const fsTitle=gi('t1_fs_title'),fsAt=gi('t1_fs_axis_title'),fsTick=gi('t1_fs_tick'),fsX=gi('t1_fs_xlabel'),fsL=gi('t1_fs_label');
+  const{min:ymin,max:ymax}=getYBounds('t1_ymin','t1_ymax');
+  const showLeg=gb('t1_show_legend');
+  const lnBefore=gv('t1_ln_before')||'改善前',lnTarget=gv('t1_ln_target')||'目標值';
+  if(isNaN(bVal)||isNaN(tVal)){alert('請輸入有效數值');return;}
+  destroyChart('chart1');showChart('chart1');setTitle('chart1',title,fsTitle,tc);
+  const labels=[makeLabel('改善前',bDate),'目標值'];
+  const singleDs={data:[bVal,tVal],label:'',backgroundColor:[cB,cT],borderRadius:4,borderSkipped:false,barPercentage:.55,categoryPercentage:.6};
+  const cfg=barConfig(labels,[singleDs],{yTitle,unit,decimal:dec,ymin,ymax,fsAxisTitle:fsAt,fsTick,fsXLabel:fsX,textColor:tc,showLegend:false,bottomPad:showLeg?40:10});
+  const chart=new Chart(document.getElementById('chart1').getContext('2d'),cfg);
+  // Draw custom bottom legend manually if needed
+  chart._qcLegendEntries=showLeg?[{color:cB,label:lnBefore},{color:cT,label:lnTarget}]:null;
+  chart._qcTextColor=tc;
+  applyMeta(chart,{unit,decimal:dec,yTitle,fsLabel:fsL,fsAxisTitle:fsAt,textColor:tc});
+  chartInstances['chart1']=chart;
 }
 
 // ===== CHART 2 =====
-function generateChart2() {
-  const beforeDate = gv('t2_before_date').trim(), duringDate = gv('t2_during_date').trim();
-  const beforeVal = parseFloat(gv('t2_before_val')), duringVal = parseFloat(gv('t2_during_val'));
-  const unit = gv('t2_unit'), decimal = gv('t2_decimal');
-  const chartTitle = gv('t2_title') || '對策實施';
-  const yTitle = gv('t2_yaxis_title');
-  const colBefore = gv('t2_col_before'), colDuring = gv('t2_col_during');
-  const textColor = gv('t2_text_color');
-  const fsTitle = gi('t2_fs_title'), fsAxisTitle = gi('t2_fs_axis_title');
-  const fsTick = gi('t2_fs_tick'), fsLabel = gi('t2_fs_label');
-  const { min: ymin, max: ymax } = getYBounds('t2_ymin','t2_ymax');
-
-  if (isNaN(beforeVal)||isNaN(duringVal)) { alert('請輸入有效數值'); return; }
-  destroyChart('chart2'); showChart('chart2');
-
-  const titleEl = document.getElementById('chart2_title');
-  titleEl.textContent = chartTitle;
-  titleEl.style.fontSize = fsTitle + 'px';
-  titleEl.style.color = textColor;
-
-  const labels = [makeLabel('改善前', beforeDate), makeLabel('改善中', duringDate)];
-  const cfg = barConfig(labels, [{
-    data: [beforeVal, duringVal],
-    backgroundColor: [colBefore, colDuring],
-    borderRadius: 4, borderSkipped: false, barPercentage: 0.45,
-  }], { yTitle, unit, decimal, ymin, ymax, fsAxisTitle, fsTick, textColor });
-
-  const chart = new Chart(document.getElementById('chart2').getContext('2d'), cfg);
-  applyChartMeta(chart, { unit, decimal, yTitle, fsLabel, fsAxisTitle, textColor });
-  chartInstances['chart2'] = chart;
+function generateChart2(){
+  const bDate=gv('t2_before_date').trim(),dDate=gv('t2_during_date').trim();
+  const bVal=parseFloat(gv('t2_before_val')),dVal=parseFloat(gv('t2_during_val'));
+  const unit=gv('t2_unit'),dec=gv('t2_decimal'),title=gv('t2_title')||'對策實施',yTitle=gv('t2_yaxis_title');
+  const cB=gv('t2_col_before'),cD=gv('t2_col_during'),tc=gv('t2_text_color');
+  const fsTitle=gi('t2_fs_title'),fsAt=gi('t2_fs_axis_title'),fsTick=gi('t2_fs_tick'),fsX=gi('t2_fs_xlabel'),fsL=gi('t2_fs_label');
+  const{min:ymin,max:ymax}=getYBounds('t2_ymin','t2_ymax');
+  const showLeg=gb('t2_show_legend');
+  const lnB=gv('t2_ln_before')||'改善前',lnD=gv('t2_ln_during')||'改善中';
+  if(isNaN(bVal)||isNaN(dVal)){alert('請輸入有效數值');return;}
+  destroyChart('chart2');showChart('chart2');setTitle('chart2',title,fsTitle,tc);
+  const labels=[makeLabel('改善前',bDate),makeLabel('改善中',dDate)];
+  const singleDs={data:[bVal,dVal],label:'',backgroundColor:[cB,cD],borderRadius:4,borderSkipped:false,barPercentage:.55,categoryPercentage:.6};
+  const cfg=barConfig(labels,[singleDs],{yTitle,unit,decimal:dec,ymin,ymax,fsAxisTitle:fsAt,fsTick,fsXLabel:fsX,textColor:tc,showLegend:false,bottomPad:showLeg?40:10});
+  const chart=new Chart(document.getElementById('chart2').getContext('2d'),cfg);
+  chart._qcLegendEntries=showLeg?[{color:cB,label:lnB},{color:cD,label:lnD}]:null;
+  chart._qcTextColor=tc;
+  applyMeta(chart,{unit,decimal:dec,yTitle,fsLabel:fsL,fsAxisTitle:fsAt,textColor:tc});
+  chartInstances['chart2']=chart;
 }
 
 // ===== CHART 3 =====
-function generateChart3() {
-  const beforeDate = gv('t3_before_date').trim(), afterDate = gv('t3_after_date').trim();
-  const beforeVal = parseFloat(gv('t3_before_val')), targetVal = parseFloat(gv('t3_target_val')), afterVal = parseFloat(gv('t3_after_val'));
-  const unit = gv('t3_unit'), decimal = gv('t3_decimal');
-  const chartTitle = gv('t3_title') || '效果確認';
-  const yTitle = gv('t3_yaxis_title');
-  const colBefore = gv('t3_col_before'), colTarget = gv('t3_col_target'), colAfter = gv('t3_col_after');
-  const textColor = gv('t3_text_color');
-  const fsTitle = gi('t3_fs_title'), fsAxisTitle = gi('t3_fs_axis_title');
-  const fsTick = gi('t3_fs_tick'), fsLabel = gi('t3_fs_label');
-  const { min: ymin, max: ymax } = getYBounds('t3_ymin','t3_ymax');
-
-  if (isNaN(beforeVal)||isNaN(targetVal)||isNaN(afterVal)) { alert('請輸入有效數值'); return; }
-  destroyChart('chart3'); showChart('chart3');
-
-  const titleEl = document.getElementById('chart3_title');
-  titleEl.textContent = chartTitle;
-  titleEl.style.fontSize = fsTitle + 'px';
-  titleEl.style.color = textColor;
-
-  const labels = [makeLabel('改善前', beforeDate), '目標值', makeLabel('改善後', afterDate)];
-  const cfg = barConfig(labels, [{
-    data: [beforeVal, targetVal, afterVal],
-    backgroundColor: [colBefore, colTarget, colAfter],
-    borderRadius: 4, borderSkipped: false, barPercentage: 0.45,
-  }], { yTitle, unit, decimal, ymin, ymax, fsAxisTitle, fsTick, textColor });
-
-  const chart = new Chart(document.getElementById('chart3').getContext('2d'), cfg);
-  applyChartMeta(chart, { unit, decimal, yTitle, fsLabel, fsAxisTitle, textColor });
-  chartInstances['chart3'] = chart;
+function generateChart3(){
+  const bDate=gv('t3_before_date').trim(),aDate=gv('t3_after_date').trim();
+  const bVal=parseFloat(gv('t3_before_val')),tVal=parseFloat(gv('t3_target_val')),aVal=parseFloat(gv('t3_after_val'));
+  const unit=gv('t3_unit'),dec=gv('t3_decimal'),title=gv('t3_title')||'效果確認',yTitle=gv('t3_yaxis_title');
+  const cB=gv('t3_col_before'),cT=gv('t3_col_target'),cA=gv('t3_col_after'),tc=gv('t3_text_color');
+  const fsTitle=gi('t3_fs_title'),fsAt=gi('t3_fs_axis_title'),fsTick=gi('t3_fs_tick'),fsX=gi('t3_fs_xlabel'),fsL=gi('t3_fs_label');
+  const{min:ymin,max:ymax}=getYBounds('t3_ymin','t3_ymax');
+  const showLeg=gb('t3_show_legend');
+  const lnB=gv('t3_ln_before')||'改善前',lnT=gv('t3_ln_target')||'目標值',lnA=gv('t3_ln_after')||'改善後';
+  if(isNaN(bVal)||isNaN(tVal)||isNaN(aVal)){alert('請輸入有效數值');return;}
+  destroyChart('chart3');showChart('chart3');setTitle('chart3',title,fsTitle,tc);
+  const labels=[makeLabel('改善前',bDate),'目標值',makeLabel('改善後',aDate)];
+  const singleDs={data:[bVal,tVal,aVal],label:'',backgroundColor:[cB,cT,cA],borderRadius:4,borderSkipped:false,barPercentage:.55,categoryPercentage:.6};
+  const cfg=barConfig(labels,[singleDs],{yTitle,unit,decimal:dec,ymin,ymax,fsAxisTitle:fsAt,fsTick,fsXLabel:fsX,textColor:tc,showLegend:false,bottomPad:showLeg?40:10});
+  const chart=new Chart(document.getElementById('chart3').getContext('2d'),cfg);
+  chart._qcLegendEntries=showLeg?[{color:cB,label:lnB},{color:cT,label:lnT},{color:cA,label:lnA}]:null;
+  chart._qcTextColor=tc;
+  applyMeta(chart,{unit,decimal:dec,yTitle,fsLabel:fsL,fsAxisTitle:fsAt,textColor:tc});
+  chartInstances['chart3']=chart;
 }
 
-// ===== TREND ROW =====
-function addTrendRow(label='', val='') {
-  const area = document.getElementById('trend_points');
-  const row = document.createElement('div');
-  row.className = 'data-row trend-data-row';
-  row.innerHTML = `
-    <input type="text" placeholder="例：2024/01" value="${label}" style="font-size:12px">
+// ===== TREND =====
+function addTrendRow(label='',val=''){
+  const area=document.getElementById('trend_points');
+  const row=document.createElement('div');
+  row.className='data-row';row.style.cssText='display:grid;grid-template-columns:1fr 90px 28px;gap:4px;align-items:center;margin-bottom:4px;background:rgba(255,255,255,.03);border-radius:6px;padding:5px;';
+  row.innerHTML=`<input type="text" placeholder="例：2024/01" value="${label}" style="font-size:12px">
     <input type="number" placeholder="數值" value="${val}" step="any" style="font-size:12px">
-    <button class="del-btn" onclick="this.parentElement.remove()">✕</button>
-  `;
+    <button class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
   area.appendChild(row);
 }
 
-// ===== CHART 4 =====
-function generateChart4() {
-  const rows = document.querySelectorAll('#trend_points .trend-data-row');
-  const allLabels = [], allData = [];
-  rows.forEach(r => {
-    const inputs = r.querySelectorAll('input');
-    const lbl = inputs[0].value.trim();
-    const val = parseFloat(inputs[1].value);
-    if (lbl) { allLabels.push(lbl); allData.push(isNaN(val) ? null : val); }
-  });
-  if (allLabels.length === 0) { alert('請至少輸入一個資料點'); return; }
-
-  const unit = gv('t4_unit'), decimal = gv('t4_decimal');
-  const chartTitle = gv('t4_title') || '推移圖';
-  const yTitle = gv('t4_yaxis_title');
-  const colLine = gv('t4_col_line'), colTarget = gv('t4_col_target');
-  const textColor = gv('t4_text_color');
-  const fsTitle = gi('t4_fs_title'), fsAxisTitle = gi('t4_fs_axis_title');
-  const fsTick = gi('t4_fs_tick'), fsLabel = gi('t4_fs_label');
-  const { min: ymin, max: ymax } = getYBounds('t4_ymin','t4_ymax');
-
-  const targetRaw = gv('t4_target');
-  const targetVal = targetRaw !== '' ? parseFloat(targetRaw) : null;
-  const targetStartRaw = parseInt(gv('t4_target_start')) || 1;
-  const targetStart = Math.max(1, Math.min(targetStartRaw, allLabels.length)) - 1;
-
-  destroyChart('chart4'); showChart('chart4');
-
-  const titleEl = document.getElementById('chart4_title');
-  titleEl.textContent = chartTitle;
-  titleEl.style.fontSize = fsTitle + 'px';
-  titleEl.style.color = textColor;
-
-  const datasets = [{
-    label: '實績', data: allData,
-    borderColor: colLine, backgroundColor: hexToRgba(colLine, 0.08),
-    pointBackgroundColor: colLine, pointRadius: 6, pointHoverRadius: 8,
-    fill: true, tension: 0.3, borderWidth: 2.5,
-  }];
-
-  if (targetVal !== null && !isNaN(targetVal)) {
-    // Build target data: null before start index, then value
-    const targetData = allLabels.map((_, i) => i >= targetStart ? targetVal : null);
-    datasets.push({
-      label: '目標線', data: targetData,
-      borderColor: colTarget, borderDash: [8,4], borderWidth: 2,
-      pointRadius: 0, fill: false, spanGaps: false,
-    });
+function generateChart4(){
+  const rows=document.querySelectorAll('#trend_points .data-row');
+  const lbls=[],data=[];
+  rows.forEach(r=>{const ins=r.querySelectorAll('input');const l=ins[0].value.trim(),v=parseFloat(ins[1].value);
+    if(l){lbls.push(l);data.push(isNaN(v)?null:v);}});
+  if(!lbls.length){alert('請至少輸入一個資料點');return;}
+  const unit=gv('t4_unit'),dec=gv('t4_decimal'),title=gv('t4_title')||'推移圖',yTitle=gv('t4_yaxis_title');
+  const cL=gv('t4_col_line'),cT=gv('t4_col_target'),tc=gv('t4_text_color');
+  const fsTitle=gi('t4_fs_title'),fsAt=gi('t4_fs_axis_title'),fsTick=gi('t4_fs_tick'),fsX=gi('t4_fs_xlabel'),fsL=gi('t4_fs_label');
+  const{min:ymin,max:ymax}=getYBounds('t4_ymin','t4_ymax');
+  const showLeg=gb('t4_show_legend');
+  const lnLine=gv('t4_ln_line')||'實績',lnTarget=gv('t4_ln_target')||'目標線';
+  const tRaw=gv('t4_target'),tVal=tRaw!==''?parseFloat(tRaw):null;
+  const tStart=Math.max(1,parseInt(gv('t4_target_start'))||1)-1;
+  destroyChart('chart4');showChart('chart4');setTitle('chart4',title,fsTitle,tc);
+  const datasets=[{label:lnLine,data,borderColor:cL,backgroundColor:hexToRgba(cL,.08),
+    pointBackgroundColor:cL,pointRadius:6,pointHoverRadius:8,fill:true,tension:.3,borderWidth:2.5}];
+  if(tVal!==null&&!isNaN(tVal)){
+    const td=lbls.map((_,i)=>i>=tStart?tVal:null);
+    datasets.push({label:lnTarget,data:td,borderColor:cT,borderDash:[8,4],borderWidth:2,pointRadius:0,fill:false,spanGaps:false});
   }
-
-  const chart = new Chart(document.getElementById('chart4').getContext('2d'), {
-    type: 'line',
-    data: { labels: allLabels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          display: targetVal !== null && !isNaN(targetVal),
-          labels: { color: textColor, font: { size: 13 } }
-        },
-        tooltip: { callbacks: { label: ctx => ctx.raw!==null ? formatVal(ctx.raw, unit, decimal) : '' } }
-      },
-      layout: { padding: { top: 20, right: 24, left: 48, bottom: 10 } },
-      scales: {
-        x: {
-          ticks: { font: { size: fsTick }, color: textColor },
-          grid: { drawOnChartArea: false, color: GRID_NONE },
-          border: { color: '#ccc' }
-        },
-        y: {
-          min: ymin, max: ymax,
-          ticks: { font: { size: fsTick }, color: textColor, callback: v => formatVal(v, unit, decimal) },
-          title: { display: false, text: yTitle },
-          grid: { color: ctx => ctx.tick.value===0 ? '#bbb' : GRID_MAIN, lineWidth: 1, drawTicks: false },
-          border: { color: '#ccc' }
-        }
+  const chart=new Chart(document.getElementById('chart4').getContext('2d'),{
+    type:'line',data:{labels:lbls,datasets},
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:showLeg,position:'bottom',labels:{color:tc,font:{size:12},padding:14}},
+        tooltip:{callbacks:{label:ctx=>ctx.raw!==null?formatVal(ctx.raw,unit,dec):''}}},
+      layout:{padding:{top:20,right:24,left:48,bottom:10}},
+      scales:{
+        x:{ticks:{font:{size:fsX},color:tc},grid:{drawOnChartArea:false,color:GRID_NONE},border:{color:'#ccc'}},
+        y:{min:ymin,max:ymax,ticks:{font:{size:fsTick},color:tc,callback:v=>formatVal(v,unit,dec)},
+          title:{display:false,text:yTitle},
+          grid:{color:ctx=>ctx.tick.value===0?'#bbb':GRID_MAIN,lineWidth:1,drawTicks:false},
+          border:{color:'#ccc'}}
       }
     }
   });
-  applyChartMeta(chart, { unit, decimal, yTitle, fsLabel, fsAxisTitle, textColor });
-  chartInstances['chart4'] = chart;
+  applyMeta(chart,{unit,decimal:dec,yTitle,fsLabel:fsL,fsAxisTitle:fsAt,textColor:tc});
+  chartInstances['chart4']=chart;
 }
 
-// ===== RADAR ROW =====
-function addRadarRow(name='', v1='', v2='') {
-  const list = document.getElementById('radar_items');
-  const row = document.createElement('div');
-  row.className = 'data-row radar-data-row';
-  row.innerHTML = `
-    <input type="text" placeholder="項目名稱" value="${name}" style="font-size:12px">
+// ===== RADAR =====
+function addRadarRow(name='',v1='',v2=''){
+  const list=document.getElementById('radar_items');
+  const row=document.createElement('div');
+  row.className='data-row';row.style.cssText='display:grid;grid-template-columns:1fr 65px 65px 28px;gap:4px;align-items:center;margin-bottom:4px;background:rgba(255,255,255,.03);border-radius:6px;padding:5px;';
+  row.innerHTML=`<input type="text" placeholder="項目名稱" value="${name}" style="font-size:12px">
     <input type="number" placeholder="系列1" value="${v1}" step="any" style="font-size:12px">
     <input type="number" placeholder="系列2" value="${v2}" step="any" style="font-size:12px">
-    <button class="del-btn" onclick="this.parentElement.remove()">✕</button>
-  `;
+    <button class="del-btn" onclick="this.parentElement.remove()">✕</button>`;
   list.appendChild(row);
 }
 
-// ===== CHART 5 =====
-function generateChart5() {
-  const rows = document.querySelectorAll('#radar_items .radar-data-row');
-  const labels = [], s1data = [], s2data = [];
-  rows.forEach(r => {
-    const inputs = r.querySelectorAll('input');
-    const lbl = inputs[0].value.trim();
-    const v1 = parseFloat(inputs[1].value);
-    const v2 = parseFloat(inputs[2].value);
-    if (lbl) {
-      labels.push(lbl);
-      s1data.push(isNaN(v1) ? 0 : v1);
-      s2data.push(isNaN(v2) ? null : v2);
+function generateChart5(){
+  const rows=document.querySelectorAll('#radar_items .data-row');
+  const lbls=[],s1=[],s2=[];
+  rows.forEach(r=>{const ins=r.querySelectorAll('input');const l=ins[0].value.trim(),v1=parseFloat(ins[1].value),v2=parseFloat(ins[2].value);
+    if(l){lbls.push(l);s1.push(isNaN(v1)?0:v1);s2.push(isNaN(v2)?null:v2);}});
+  if(!lbls.length){alert('請至少輸入一個評估項目');return;}
+  const minV=parseFloat(gv('t5_min'))||0,maxV=parseFloat(gv('t5_max'))||10;
+  const title=gv('t5_title')||'雷達圖';
+  const cS1=gv('t5_col_s1'),cS2=gv('t5_col_s2'),tc=gv('t5_text_color');
+  const fsTitle=gi('t5_fs_title'),fsL=gi('t5_fs_label'),fsTick=gi('t5_fs_tick');
+  const showLeg=gb('t5_show_legend');
+  const lnS1=gv('t5_ln_s1')||'系列1',lnS2=gv('t5_ln_s2')||'系列2';
+  destroyChart('chart5');showChart('chart5');setTitle('chart5',title,fsTitle,tc);
+  const datasets=[{label:lnS1,data:s1,backgroundColor:hexToRgba(cS1,.2),borderColor:cS1,pointBackgroundColor:cS1,pointRadius:5,borderWidth:2}];
+  if(s2.some(v=>v!==null)){
+    datasets.push({label:lnS2,data:s2.map(v=>v===null?0:v),backgroundColor:hexToRgba(cS2,.18),borderColor:cS2,pointBackgroundColor:cS2,pointRadius:5,borderWidth:2});
+  }
+  const chart=new Chart(document.getElementById('chart5').getContext('2d'),{
+    type:'radar',data:{labels:lbls,datasets},
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:showLeg,position:'bottom',labels:{color:tc,font:{size:13},padding:16}}},
+      scales:{r:{min:minV,max:maxV,
+        ticks:{stepSize:(maxV-minV)/5,font:{size:fsTick},color:tc,backdropColor:'transparent'},
+        pointLabels:{font:{size:fsL,weight:'600'},color:tc},
+        grid:{color:GRID_MAIN},angleLines:{color:'rgb(220,220,220)'}}}
     }
   });
-  if (labels.length === 0) { alert('請至少輸入一個評估項目'); return; }
+  chartInstances['chart5']=chart;
+}
 
-  const s1Name = gv('t5_s1_name') || '系列1';
-  const s2Name = gv('t5_s2_name');
-  const minVal = parseFloat(gv('t5_min')) || 0;
-  const maxVal = parseFloat(gv('t5_max')) || 10;
-  const chartTitle = gv('t5_title') || '雷達圖';
-  const colS1 = gv('t5_col_s1'), colS2 = gv('t5_col_s2');
-  const textColor = gv('t5_text_color');
-  const fsTitle = gi('t5_fs_title'), fsLabel = gi('t5_fs_label'), fsTick = gi('t5_fs_tick');
+// ===== PARETO ROWS =====
+function addParetoRowBefore(name='',v1=''){
+  const list=document.getElementById('pareto_rows_before');
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:1fr 80px 28px;gap:4px;align-items:center;margin-bottom:4px;background:rgba(255,255,255,.03);border-radius:6px;padding:5px;';
+  row.innerHTML=`<input type="text" placeholder="例：外觀不良" value="${name}" style="font-size:12px" oninput="updateParetoPreview()">
+    <input type="number" placeholder="次數" value="${v1}" min="0" style="font-size:12px" oninput="updateParetoPreview()">
+    <button class="del-btn" onclick="this.parentElement.remove();updateParetoPreview()">✕</button>`;
+  list.appendChild(row);updateParetoPreview();
+}
+function addParetoRowCompare(name='',v1='',v2=''){
+  const list=document.getElementById('pareto_rows_compare');
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:1fr 70px 70px 28px;gap:4px;align-items:center;margin-bottom:4px;background:rgba(255,255,255,.03);border-radius:6px;padding:5px;';
+  row.innerHTML=`<input type="text" placeholder="例：外觀不良" value="${name}" style="font-size:12px" oninput="updateParetoPreview()">
+    <input type="number" placeholder="改善前" value="${v1}" min="0" style="font-size:12px" oninput="updateParetoPreview()">
+    <input type="number" placeholder="改善後" value="${v2}" min="0" style="font-size:12px" oninput="updateParetoPreview()">
+    <button class="del-btn" onclick="this.parentElement.remove();updateParetoPreview()">✕</button>`;
+  list.appendChild(row);updateParetoPreview();
+}
 
-  destroyChart('chart5'); showChart('chart5');
+function getParetoData(){
+  if(paretoMode==='before'){
+    return [...document.querySelectorAll('#pareto_rows_before div')].map(r=>{
+      const ins=r.querySelectorAll('input');const name=ins[0]?.value.trim();const cnt=parseFloat(ins[1]?.value);
+      return name?{name,v1:isNaN(cnt)?0:cnt,v2:null}:null;
+    }).filter(Boolean);
+  } else {
+    return [...document.querySelectorAll('#pareto_rows_compare div')].map(r=>{
+      const ins=r.querySelectorAll('input');const name=ins[0]?.value.trim();
+      const c1=parseFloat(ins[1]?.value),c2=parseFloat(ins[2]?.value);
+      return name?{name,v1:isNaN(c1)?0:c1,v2:isNaN(c2)?0:c2}:null;
+    }).filter(Boolean);
+  }
+}
 
-  const titleEl = document.getElementById('chart5_title');
-  titleEl.textContent = chartTitle;
-  titleEl.style.fontSize = fsTitle + 'px';
-  titleEl.style.color = textColor;
+function updateParetoPreview(){
+  const items=getParetoData().filter(i=>i.v1>0);
+  const preview=document.getElementById('pareto_preview');
+  if(!items.length){preview.innerHTML='<em style="color:var(--text-muted);font-size:11px;">輸入次數後自動更新</em>';return;}
+  if(paretoMode==='before'){
+    const sorted=[...items].sort((a,b)=>b.v1-a.v1);
+    const total=sorted.reduce((s,i)=>s+i.v1,0)||1;
+    let cum=0,html=`<table><tr><th>項目</th><th>次數</th><th>佔比%</th><th>累計%</th></tr>`;
+    sorted.forEach(i=>{const pct=Math.round(i.v1/total*10000)/100;cum+=i.v1;const cp=Math.round(cum/total*10000)/100;
+      html+=`<tr><td>${i.name}</td><td>${i.v1}</td><td>${pct.toFixed(1)}%</td><td>${cp.toFixed(1)}%</td></tr>`;});
+    html+=`<tr><td>合計</td><td>${total}</td><td>100%</td><td>—</td></tr></table>`;
+    preview.innerHTML=html;
+  } else {
+    const sorted=[...items].sort((a,b)=>b.v1-a.v1);
+    const t1=sorted.reduce((s,i)=>s+i.v1,0)||1,t2=sorted.reduce((s,i)=>s+(i.v2||0),0)||1;
+    let c1=0,c2=0,html=`<table><tr><th>項目</th><th>前次數</th><th>前累計%</th><th>後次數</th><th>後累計%</th></tr>`;
+    sorted.forEach(i=>{c1+=i.v1;c2+=(i.v2||0);
+      html+=`<tr><td>${i.name}</td><td>${i.v1}</td><td>${(Math.round(c1/t1*10000)/100).toFixed(1)}%</td><td>${i.v2||0}</td><td>${(Math.round(c2/t2*10000)/100).toFixed(1)}%</td></tr>`;});
+    html+=`<tr><td>合計</td><td>${t1}</td><td>—</td><td>${t2}</td><td>—</td></tr></table>`;
+    preview.innerHTML=html;
+  }
+}
 
-  const datasets = [{
-    label: s1Name, data: s1data,
-    backgroundColor: hexToRgba(colS1, 0.2), borderColor: colS1,
-    pointBackgroundColor: colS1, pointRadius: 5, borderWidth: 2,
-  }];
+// ===== CHART 6 PARETO =====
+function generateChart6(){
+  const items=getParetoData();
+  if(!items.length){alert('請至少輸入一個項目');return;}
+  const title=gv('t6_title')||'柏拉圖',yAxisLeft=gv('t6_yaxis_left')||'次數',yAxisRight=gv('t6_yaxis_right')||'累計比率(%)';
+  const ymaxRaw=gn('t6_ymax'),colLine=gv('t6_col_line'),tc=gv('t6_text_color');
+  const fsTitle=gi('t6_fs_title'),fsAt=gi('t6_fs_axis_title'),fsTick=gi('t6_fs_tick'),fsX=gi('t6_fs_xlabel'),fsL=gi('t6_fs_label');
+  const showLeg=gb('t6_show_legend');
+  const lnB=gv('t6_ln_before')||'改善前次數',lnA=gv('t6_ln_after')||'改善後次數';
+  const lnC1=gv('t6_ln_cum1')||'改善前累計%',lnC2=gv('t6_ln_cum2')||'改善後累計%';
 
-  if (s2data.some(v => v !== null) && s2Name) {
-    datasets.push({
-      label: s2Name, data: s2data.map(v => v===null ? 0 : v),
-      backgroundColor: hexToRgba(colS2, 0.18), borderColor: colS2,
-      pointBackgroundColor: colS2, pointRadius: 5, borderWidth: 2,
-    });
+  const sorted=[...items].sort((a,b)=>b.v1-a.v1);
+  const labels=sorted.map(i=>i.name);
+  const vals1=sorted.map(i=>i.v1);
+  const vals2=sorted.map(i=>i.v2||0);
+  const total1=vals1.reduce((s,v)=>s+v,0)||1;
+  const total2=vals2.reduce((s,v)=>s+v,0)||1;
+
+  // Y-axis left max = total1 (改善前加總); compare mode uses same max (fix 6c)
+  const ymax=ymaxRaw||total1;
+
+  // Cumulative % for before
+  let c1=0;
+  const cumPct1=vals1.map(v=>{c1+=v;return Math.round(c1/total1*10000)/100;});
+
+  // Cumulative % for compare mode:
+  // Line ends at reduction value = (total2/total1)*100 — NOT 100% (fix 6b)
+  // Each point: (cumAfter_i / total1) * 100
+  let c2=0;
+  const cumPct2After=vals2.map(v=>{c2+=v;return Math.round(c2/total1*10000)/100;});
+  // final value = total2/total1*100
+  const reductionPct=Math.round(total2/total1*10000)/100;
+
+  // Per-item colours — same palette index = same colour for before & after (fix 1)
+  const itemColors=sorted.map((_,i)=>PARETO_PALETTE[i%PARETO_PALETTE.length]);
+  const itemColorsFaded=itemColors.map(c=>hexToRgba(c,.5));
+  const colLine2=hexToRgba(gv('t6_col_after')||'#2E7D32',1);
+
+  destroyChart('chart6');showChart('chart6');setTitle('chart6',title,fsTitle,tc);
+
+  // COMPARE mode: only show after bars (fix 6a)
+  let datasets;
+  if(paretoMode==='before'){
+    datasets=[{
+      type:'bar',label:lnB,data:vals1,
+      backgroundColor:itemColors,borderColor:itemColors,
+      borderRadius:0,barPercentage:1.0,categoryPercentage:1.0,yAxisID:'y',order:1
+    }];
+  } else {
+    // Only改善後 bars, coloured same as their before counterpart (fix 6a + fix 1)
+    datasets=[{
+      type:'bar',label:lnA,data:vals2,
+      backgroundColor:itemColors,  // same palette = same colour as before (fix 1)
+      borderColor:itemColors,
+      borderRadius:0,barPercentage:1.0,categoryPercentage:1.0,yAxisID:'y',order:1
+    }];
   }
 
-  const chart = new Chart(document.getElementById('chart5').getContext('2d'), {
-    type: 'radar',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: { display: true, labels: { color: textColor, font: { size: 13 }, padding: 16 } }
+  // Pareto line plugin — draws cumulative line from y-axis at 0%
+  // Each point lands on the RIGHT EDGE of its bar (fix 3)
+  // Last point = rightmost bar's right edge = xScale.right (no overshoot, fix 3)
+  // Compare mode: line ends at reductionPct (not 100%, fix 6b)
+  const paretoLinePlugin={
+    id:'paretoLine',
+    afterDatasetsDraw(chart){
+      const{ctx,scales}=chart;
+      const xScale=scales['x'],y2Scale=scales['y2'];
+      if(!xScale||!y2Scale)return;
+      const n=(chart._cumPct1||chart._cumPct2)?.length||0;if(!n)return;
+      const totalW=xScale.right-xScale.left;
+      const barW=totalW/n; // each bar occupies totalW/n pixels (offset:true)
+
+      const drawLine=(cumArr,color,dash)=>{
+        if(!cumArr||!cumArr.length)return;
+        ctx.save();
+        ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.setLineDash(dash||[]);
+        ctx.beginPath();
+        // Origin: left edge of chart area (y-axis), y2 = 0%
+        ctx.moveTo(xScale.left, y2Scale.getPixelForValue(0));
+        cumArr.forEach((pct,i)=>{
+          const xRight=xScale.left+(i+1)*barW;
+          ctx.lineTo(xRight, y2Scale.getPixelForValue(pct));
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Dots
+        cumArr.forEach((pct,i)=>{
+          const xRight=xScale.left+(i+1)*barW;
+          ctx.beginPath();
+          ctx.arc(xRight, y2Scale.getPixelForValue(pct),5,0,Math.PI*2);
+          ctx.fillStyle=color;ctx.fill();
+        });
+        ctx.restore();
+      };
+
+      // before mode: draw cumPct1 with colLine1
+      // compare mode: _cumPct1 is null; draw cumPct2 with colLine (same line colour setting)
+      if(chart._cumPct1) drawLine(chart._cumPct1, chart._colLine1, []);
+      if(chart._cumPct2) drawLine(chart._cumPct2, chart._colLine1, []);
+    }
+  };
+
+  // Bottom legend drawn by paretoLegendPlugin (registered globally)
+  const chart=new Chart(document.getElementById('chart6').getContext('2d'),{
+    type:'bar',data:{labels,datasets},plugins:[paretoLinePlugin],
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{
+        legend:{display:false}, // custom legend via paretoLegendPlugin
+        tooltip:{callbacks:{label(ctx){return`${ctx.dataset.label}: ${ctx.raw}`;}}}
       },
-      scales: {
-        r: {
-          min: minVal, max: maxVal,
-          ticks: { stepSize: (maxVal-minVal)/5, font: { size: fsTick }, color: textColor, backdropColor: 'transparent' },
-          pointLabels: { font: { size: fsLabel, weight: '600' }, color: textColor },
-          grid: { color: GRID_MAIN },
-          angleLines: { color: 'rgb(220,220,220)' },
-        }
+      layout:{padding:{top:40,right:70,left:20,bottom:showLeg?40:10}},
+      scales:{
+        x:{
+          offset:true,  // labels centred between gridlines (fix 2)
+          ticks:{font:{size:fsX},color:tc,maxRotation:20},
+          grid:{drawOnChartArea:false,color:GRID_NONE},
+          border:{color:'#ccc'}
+        },
+        y:{min:0,max:ymax,
+          ticks:{font:{size:fsTick},color:tc},
+          title:{display:true,text:yAxisLeft,font:{size:fsAt,weight:'600'},color:tc},
+          grid:{color:ctx=>ctx.tick.value===0?'#bbb':GRID_MAIN,lineWidth:1,drawTicks:false},
+          border:{color:'#ccc'}},
+        y2:{min:0,max:100,position:'right',
+          ticks:{font:{size:fsTick},color:tc,callback:v=>v+'%',stepSize:20},
+          title:{display:true,text:yAxisRight,font:{size:fsAt,weight:'600'},color:tc},
+          grid:{drawOnChartArea:false},border:{color:'#ccc'}}
       }
     }
   });
-  chartInstances['chart5'] = chart;
+
+  chart._qcFsLabel=fsL;chart._qcTextColor=tc;chart._qcUnit='value';chart._qcDecimal='0';chart._qcYTitle='';
+  chart._paretoTotal1=total1;chart._paretoTotal2=total2;
+  // Compare mode: only draw after cumulative line (no before line)
+  chart._cumPct1=paretoMode==='before'?cumPct1:null;
+  chart._cumPct2=paretoMode==='compare'?cumPct2After:null;
+  chart._colLine1=colLine;chart._colLine2=colLine2;
+  chart._showLegend=showLeg;
+  chart._legendLabels={lnB,lnA,lnC1,lnC2};
+  chart._fsLegend=12;chart._tcLegend=tc;
+  chartInstances['chart6']=chart;
 }
 
-// ===== DOWNLOAD AS JPG =====
-function downloadChart(id) {
-  if (!chartInstances[id]) { alert('請先生成圖表'); return; }
-  const canvas = document.getElementById(id);
-  const titleEl = document.getElementById(id + '_title');
-  const titleText = titleEl.textContent;
-  const titleSize = parseInt(titleEl.style.fontSize) || 18;
-  const titleColor = titleEl.style.color || '#000000';
-
-  const scale = 2;
-  const off = document.createElement('canvas');
-  off.width  = canvas.width * scale;
-  off.height = (canvas.height + 64) * scale;
-  const ctx = off.getContext('2d');
-  ctx.scale(scale, scale);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, off.width, off.height);
-  ctx.fillStyle = titleColor;
-  ctx.font = `700 ${titleSize}px 'Noto Sans TC', sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText(titleText, canvas.width/2, 36);
-  ctx.drawImage(canvas, 0, 52, canvas.width, canvas.height);
-
-  const link = document.createElement('a');
-  link.download = `${titleText || id}.jpg`;
-  link.href = off.toDataURL('image/jpeg', 0.95);
-  link.click();
+// ===== DOWNLOAD =====
+function downloadChart(id){
+  if(!chartInstances[id]){alert('請先生成圖表');return;}
+  const canvas=document.getElementById(id),titleEl=document.getElementById(id+'_title');
+  const txt=titleEl.textContent,sz=parseInt(titleEl.style.fontSize)||18,col=titleEl.style.color||'#000';
+  const scale=2,off=document.createElement('canvas');
+  off.width=canvas.width*scale;off.height=(canvas.height+64)*scale;
+  const ctx=off.getContext('2d');ctx.scale(scale,scale);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,off.width,off.height);
+  ctx.fillStyle=col;ctx.font=`700 ${sz}px 'Noto Sans TC',sans-serif`;
+  ctx.textAlign='center';ctx.fillText(txt,canvas.width/2,36);
+  ctx.drawImage(canvas,0,52,canvas.width,canvas.height);
+  const link=document.createElement('a');link.download=`${txt||id}.jpg`;
+  link.href=off.toDataURL('image/jpeg',.95);link.click();
 }
 
 // ===== INIT =====
-function initDefaults() {
-  [['2024/01','8.5'],['2024/02','7.8'],['2024/03','7.2'],
-   ['2024/04','6.5'],['2024/05','5.8'],['2024/06','5.0'],
-   ['2024/07','4.3'],['2024/08','3.6'],['2024/09','3.1'],
-  ].forEach(([l,v]) => addTrendRow(l,v));
-
-  [['準時交貨','6','8'],['品質合格率','5','9'],['成本控制','7','7'],
-   ['客戶滿意度','5','8'],['生產效率','6','8'],
-  ].forEach(([n,v1,v2]) => addRadarRow(n,v1,v2));
+function initLegendToggles(){
+  ['1','2','3','4','5','6'].forEach(n=>initLegendToggle(n));
 }
+
+function initDefaults(){
+  [['2024/01','8.5'],['2024/02','7.8'],['2024/03','7.2'],['2024/04','6.5'],
+   ['2024/05','5.8'],['2024/06','5.0'],['2024/07','4.3'],['2024/08','3.6'],['2024/09','3.1']
+  ].forEach(([l,v])=>addTrendRow(l,v));
+  [['準時交貨','6','8'],['品質合格率','5','9'],['成本控制','7','7'],
+   ['客戶滿意度','5','8'],['生產效率','6','8']
+  ].forEach(([n,v1,v2])=>addRadarRow(n,v1,v2));
+  [['外觀不良','45'],['尺寸超差','28'],['功能異常','18'],['包裝破損','9'],['其他','5']
+  ].forEach(([n,v])=>addParetoRowBefore(n,v));
+  [['外觀不良','45','20'],['尺寸超差','28','10'],['功能異常','18','8'],['包裝破損','9','5'],['其他','5','3']
+  ].forEach(([n,v1,v2])=>addParetoRowCompare(n,v1,v2));
+}
+
+initLegendToggles();
 initDefaults();
+
+// Expose functions globally for onclick handlers
+window.switchTab=switchTab;
+window.setParetoMode=setParetoMode;
+window.addTrendRow=addTrendRow;
+window.addRadarRow=addRadarRow;
+window.addParetoRowBefore=addParetoRowBefore;
+window.addParetoRowCompare=addParetoRowCompare;
+window.generateChart1=generateChart1;
+window.generateChart2=generateChart2;
+window.generateChart3=generateChart3;
+window.generateChart4=generateChart4;
+window.generateChart5=generateChart5;
+window.generateChart6=generateChart6;
+window.downloadChart=downloadChart;
+window.updateParetoPreview=updateParetoPreview;
+
+}); // end DOMContentLoaded
 </script>
 </body>
 </html>
