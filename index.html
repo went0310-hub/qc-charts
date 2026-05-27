@@ -991,11 +991,18 @@ function getParetoData(){
 }
 
 function updateParetoPreview(){
+  const OTHER=['其他','other','others','其它'];
+  const isOther=n=>OTHER.some(k=>n.trim().toLowerCase()===k.toLowerCase());
   const items=getParetoData().filter(i=>i.v1>0);
   const preview=document.getElementById('pareto_preview');
   if(!items.length){preview.innerHTML='<em style="color:var(--text-muted);font-size:11px;">輸入次數後自動更新</em>';return;}
+  const sortFn=(key)=>(a,b)=>{
+    if(isOther(a.name)&&!isOther(b.name))return 1;
+    if(!isOther(a.name)&&isOther(b.name))return -1;
+    return b[key]-a[key];
+  };
   if(paretoMode==='before'){
-    const sorted=[...items].sort((a,b)=>b.v1-a.v1);
+    const sorted=[...items].sort(sortFn('v1'));
     const total=sorted.reduce((s,i)=>s+i.v1,0)||1;
     let cum=0,html=`<table><tr><th>項目</th><th>次數</th><th>佔比%</th><th>累計%</th></tr>`;
     sorted.forEach(i=>{const pct=Math.round(i.v1/total*10000)/100;cum+=i.v1;const cp=Math.round(cum/total*10000)/100;
@@ -1003,12 +1010,14 @@ function updateParetoPreview(){
     html+=`<tr><td>合計</td><td>${total}</td><td>100%</td><td>—</td></tr></table>`;
     preview.innerHTML=html;
   } else {
-    const sorted=[...items].sort((a,b)=>b.v1-a.v1);
-    const t1=sorted.reduce((s,i)=>s+i.v1,0)||1,t2=sorted.reduce((s,i)=>s+(i.v2||0),0)||1;
-    let c1=0,c2=0,html=`<table><tr><th>項目</th><th>前次數</th><th>前累計%</th><th>後次數</th><th>後累計%</th></tr>`;
-    sorted.forEach(i=>{c1+=i.v1;c2+=(i.v2||0);
-      html+=`<tr><td>${i.name}</td><td>${i.v1}</td><td>${(Math.round(c1/t1*10000)/100).toFixed(1)}%</td><td>${i.v2||0}</td><td>${(Math.round(c2/t2*10000)/100).toFixed(1)}%</td></tr>`;});
-    html+=`<tr><td>合計</td><td>${t1}</td><td>—</td><td>${t2}</td><td>—</td></tr></table>`;
+    const sorted=[...items].sort(sortFn('v2'));
+    const t1=items.reduce((s,i)=>s+i.v1,0)||1,t2=items.reduce((s,i)=>s+(i.v2||0),0)||1;
+    let c2=0,html=`<table><tr><th>項目</th><th>改善前</th><th>改善後次數</th><th>改善後累計%</th></tr>`;
+    sorted.forEach(i=>{c2+=(i.v2||0);
+      const cp2=Math.round(c2/t1*10000)/100;
+      html+=`<tr><td>${i.name}</td><td>${i.v1}</td><td>${i.v2||0}</td><td>${cp2.toFixed(1)}%</td></tr>`;});
+    const endPct=Math.round(t2/t1*10000)/100;
+    html+=`<tr><td>合計</td><td>${t1}</td><td>${t2}</td><td>終點:${endPct.toFixed(1)}%</td></tr></table>`;
     preview.innerHTML=html;
   }
 }
@@ -1024,31 +1033,60 @@ function generateChart6(){
   const lnB=gv('t6_ln_before')||'改善前次數',lnA=gv('t6_ln_after')||'改善後次數';
   const lnC1=gv('t6_ln_cum1')||'改善前累計%',lnC2=gv('t6_ln_cum2')||'改善後累計%';
 
-  const sorted=[...items].sort((a,b)=>b.v1-a.v1);
+  // Sort: 其他 always last; otherwise descending by v1 (before mode) or v2 (compare mode)
+  const OTHER_KEYWORDS=['其他','other','others','其它'];
+  const isOther=name=>OTHER_KEYWORDS.some(k=>name.trim().toLowerCase()===k.toLowerCase());
+
+  // Build a stable name→colour map so same item = same colour in both modes
+  // Assign colours based on original input order (before sort), excluding 其他
+  const nameColorMap={};
+  let paletteIdx=0;
+  items.forEach(i=>{
+    if(!isOther(i.name)) nameColorMap[i.name]=PARETO_PALETTE[paletteIdx++%PARETO_PALETTE.length];
+  });
+  // 其他 gets a fixed grey
+  items.forEach(i=>{
+    if(isOther(i.name)) nameColorMap[i.name]='#9E9E9E';
+  });
+
+  // Sort for before mode: desc by v1, 其他 always last
+  const sortBefore=[...items].sort((a,b)=>{
+    if(isOther(a.name)&&!isOther(b.name))return 1;
+    if(!isOther(a.name)&&isOther(b.name))return -1;
+    return b.v1-a.v1;
+  });
+
+  // Sort for compare mode: desc by v2, 其他 always last, same colour map
+  const sortAfter=[...items].sort((a,b)=>{
+    if(isOther(a.name)&&!isOther(b.name))return 1;
+    if(!isOther(a.name)&&isOther(b.name))return -1;
+    return b.v2-a.v2;
+  });
+
+  const sorted=paretoMode==='before'?sortBefore:sortAfter;
   const labels=sorted.map(i=>i.name);
   const vals1=sorted.map(i=>i.v1);
   const vals2=sorted.map(i=>i.v2||0);
-  const total1=vals1.reduce((s,v)=>s+v,0)||1;
-  const total2=vals2.reduce((s,v)=>s+v,0)||1;
+  const total1=items.reduce((s,i)=>s+i.v1,0)||1;
+  const total2=items.reduce((s,i)=>s+(i.v2||0),0)||1;
 
-  // Y-axis left max = total1 (改善前加總); compare mode uses same max (fix 6c)
+  // Y-axis left max = total1 (same for both modes)
   const ymax=ymaxRaw||total1;
 
-  // Cumulative % for before
+  // Cumulative % for before (sorted by v1)
+  const sortedBefore=sortBefore;
+  const vals1B=sortedBefore.map(i=>i.v1);
   let c1=0;
-  const cumPct1=vals1.map(v=>{c1+=v;return Math.round(c1/total1*10000)/100;});
+  const cumPct1=vals1B.map(v=>{c1+=v;return Math.round(c1/total1*10000)/100;});
 
-  // Cumulative % for compare mode:
-  // Line ends at reduction value = (total2/total1)*100 — NOT 100% (fix 6b)
-  // Each point: (cumAfter_i / total1) * 100
+  // Cumulative % for compare (sorted by v2, scaled to total1 so ends at total2/total1*100)
+  const sortedAfter=sortAfter;
+  const vals2A=sortedAfter.map(i=>i.v2||0);
   let c2=0;
-  const cumPct2After=vals2.map(v=>{c2+=v;return Math.round(c2/total1*10000)/100;});
-  // final value = total2/total1*100
-  const reductionPct=Math.round(total2/total1*10000)/100;
+  const cumPct2After=vals2A.map(v=>{c2+=v;return Math.round(c2/total1*10000)/100;});
 
-  // Per-item colours — same palette index = same colour for before & after (fix 1)
-  const itemColors=sorted.map((_,i)=>PARETO_PALETTE[i%PARETO_PALETTE.length]);
-  const itemColorsFaded=itemColors.map(c=>hexToRgba(c,.5));
+  // Colours by name (consistent across both modes)
+  const itemColors=sorted.map(i=>nameColorMap[i.name]||'#9E9E9E');
   const colLine2=hexToRgba(gv('t6_col_after')||'#2E7D32',1);
 
   destroyChart('chart6');showChart('chart6');setTitle('chart6',title,fsTitle,tc);
@@ -1147,7 +1185,7 @@ function generateChart6(){
 
   chart._qcFsLabel=fsL;chart._qcTextColor=tc;chart._qcUnit='value';chart._qcDecimal='0';chart._qcYTitle='';
   chart._paretoTotal1=total1;chart._paretoTotal2=total2;
-  // Compare mode: only draw after cumulative line (no before line)
+  // before mode: draw cumPct1 (sorted by v1); compare mode: draw cumPct2After (sorted by v2)
   chart._cumPct1=paretoMode==='before'?cumPct1:null;
   chart._cumPct2=paretoMode==='compare'?cumPct2After:null;
   chart._colLine1=colLine;chart._colLine2=colLine2;
