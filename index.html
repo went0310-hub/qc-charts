@@ -887,8 +887,8 @@ function generateChart4(){
   const tRaw=gv('t4_target'),tVal=tRaw!==''?parseFloat(tRaw):null;
   const tStart=Math.max(1,parseInt(gv('t4_target_start'))||1)-1;
   destroyChart('chart4');showChart('chart4');setTitle('chart4',title,fsTitle,tc);
-  const datasets=[{label:lnLine,data,borderColor:cL,backgroundColor:hexToRgba(cL,.08),
-    pointBackgroundColor:cL,pointRadius:6,pointHoverRadius:8,fill:true,tension:.3,borderWidth:2.5}];
+  const datasets=[{label:lnLine,data,borderColor:cL,backgroundColor:'transparent',
+    pointBackgroundColor:cL,pointRadius:5,pointHoverRadius:7,fill:false,tension:.3,borderWidth:2.5}];
   if(tVal!==null&&!isNaN(tVal)){
     const td=lbls.map((_,i)=>i>=tStart?tVal:null);
     datasets.push({label:lnTarget,data:td,borderColor:cT,borderDash:[8,4],borderWidth:2,pointRadius:0,fill:false,spanGaps:false});
@@ -900,7 +900,7 @@ function generateChart4(){
         tooltip:{callbacks:{label:ctx=>ctx.raw!==null?formatVal(ctx.raw,unit,dec):''}}},
       layout:{padding:{top:20,right:24,left:48,bottom:10}},
       scales:{
-        x:{ticks:{font:{size:fsX},color:tc},grid:{drawOnChartArea:false,color:GRID_NONE},border:{color:'#ccc'}},
+        x:{offset:true,ticks:{font:{size:fsX},color:tc},grid:{drawOnChartArea:false,color:GRID_NONE},border:{color:'#ccc'}},
         y:{min:ymin,max:ymax,ticks:{font:{size:fsTick},color:tc,callback:v=>formatVal(v,unit,dec)},
           title:{display:false,text:yTitle},
           grid:{color:ctx=>ctx.tick.value===0?'#bbb':GRID_MAIN,lineWidth:1,drawTicks:false},
@@ -924,6 +924,25 @@ function addRadarRow(name='',v1='',v2=''){
   list.appendChild(row);
 }
 
+// Radar outer red ring plugin
+const radarOuterRingPlugin={
+  id:'radarOuterRing',
+  afterDraw(chart){
+    if(chart.config.type!=='radar')return;
+    const r=chart.scales['r'];
+    if(!r)return;
+    const{ctx}=chart;
+    const maxR=r.getDistanceFromCenterForValue(r.max);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(r.xCenter,r.yCenter,maxR,0,Math.PI*2);
+    ctx.strokeStyle=chart._radarOuterColor||'#C62828';
+    ctx.lineWidth=2.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
 function generateChart5(){
   const rows=document.querySelectorAll('#radar_items .data-row');
   const lbls=[],s1=[],s2=[];
@@ -937,20 +956,29 @@ function generateChart5(){
   const showLeg=gb('t5_show_legend');
   const lnS1=gv('t5_ln_s1')||'系列1',lnS2=gv('t5_ln_s2')||'系列2';
   destroyChart('chart5');showChart('chart5');setTitle('chart5',title,fsTitle,tc);
-  const datasets=[{label:lnS1,data:s1,backgroundColor:hexToRgba(cS1,.2),borderColor:cS1,pointBackgroundColor:cS1,pointRadius:5,borderWidth:2}];
+  const datasets=[{label:lnS1,data:s1,backgroundColor:hexToRgba(cS1,.12),borderColor:cS1,pointBackgroundColor:cS1,pointRadius:5,borderWidth:2}];
   if(s2.some(v=>v!==null)){
-    datasets.push({label:lnS2,data:s2.map(v=>v===null?0:v),backgroundColor:hexToRgba(cS2,.18),borderColor:cS2,pointBackgroundColor:cS2,pointRadius:5,borderWidth:2});
+    datasets.push({label:lnS2,data:s2.map(v=>v===null?0:v),backgroundColor:hexToRgba(cS2,.10),borderColor:cS2,pointBackgroundColor:cS2,pointRadius:5,borderWidth:2});
   }
   const chart=new Chart(document.getElementById('chart5').getContext('2d'),{
     type:'radar',data:{labels:lbls,datasets},
+    plugins:[radarOuterRingPlugin],
     options:{responsive:true,maintainAspectRatio:true,
       plugins:{legend:{display:showLeg,position:'bottom',labels:{color:tc,font:{size:13},padding:16}}},
       scales:{r:{min:minV,max:maxV,
-        ticks:{stepSize:(maxV-minV)/5,font:{size:fsTick},color:tc,backdropColor:'transparent'},
+        ticks:{
+          stepSize:2,
+          font:{size:fsTick},
+          color:tc,
+          backdropColor:'rgba(255,255,255,0.85)',
+          backdropPadding:3,
+          z:10
+        },
         pointLabels:{font:{size:fsL,weight:'600'},color:tc},
         grid:{color:GRID_MAIN},angleLines:{color:'rgb(220,220,220)'}}}
     }
   });
+  chart._radarOuterColor='#C62828';
   chartInstances['chart5']=chart;
 }
 
